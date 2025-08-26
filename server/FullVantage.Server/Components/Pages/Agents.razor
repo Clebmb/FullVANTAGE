@@ -1,0 +1,85 @@
+@page "/agents"
+@using System.Net.Http.Json
+@using FullVantage.Shared
+@inject IHttpClientFactory HttpFactory
+
+<h3>Agents</h3>
+
+@if (_agents is null)
+{
+    <p>Loading...</p>
+}
+else if (_agents.Count == 0)
+{
+    <p>No agents registered yet.</p>
+}
+else
+{
+    <table class="table table-terminal">
+        <thead>
+            <tr>
+                <th>AgentId</th>
+                <th>Machine</th>
+                <th>User</th>
+                <th>Status</th>
+                <th>Last Seen (UTC)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var a in _agents)
+        {
+            <tr>
+                <td>@a.AgentId</td>
+                <td>@a.MachineName</td>
+                <td>@a.UserName</td>
+                <td><span class="@GetStatusClass(a.Status)">@a.Status</span></td>
+                <td>@a.LastSeenUtc</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => SendHello(a.AgentId)">Send test command</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(_status))
+{
+    <div class="alert alert-info">@_status</div>
+}
+
+@code {
+    private List<AgentInfo>? _agents;
+    private string? _status;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = HttpFactory.CreateClient();
+        client.BaseAddress = new Uri(NavigationManager.BaseUri);
+        _agents = await client.GetFromJsonAsync<List<AgentInfo>>("/api/agents");
+    }
+
+    private async Task SendHello(string agentId)
+    {
+        var client = HttpFactory.CreateClient();
+        client.BaseAddress = new Uri(NavigationManager.BaseUri);
+        var req = new CommandRequest(
+            CommandId: Guid.NewGuid().ToString("N"),
+            AgentId: agentId,
+            Shell: "powershell",
+            ScriptOrCommand: "Get-Date | Out-String",
+            Timeout: TimeSpan.FromSeconds(30)
+        );
+        var resp = await client.PostAsJsonAsync($"/api/agents/{agentId}/commands", req);
+        _status = resp.IsSuccessStatusCode ? $"Sent command {req.CommandId} to {agentId}" : $"Failed to send: {resp.StatusCode}";
+        // Refresh list to update LastSeen
+        _agents = await client.GetFromJsonAsync<List<AgentInfo>>("/api/agents");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    private static string GetStatusClass(AgentStatus status)
+        => status == AgentStatus.Offline ? "status-offline" : null;
+}

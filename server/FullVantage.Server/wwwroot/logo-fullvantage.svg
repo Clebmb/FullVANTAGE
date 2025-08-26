@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="40" viewBox="0 0 240 40">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#00d474"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="240" height="40" fill="none"/>
+  <g font-family="Consolas, 'Courier New', monospace" font-size="24" font-weight="700" fill="url(#g)">
+    <text x="4" y="28">FullVANTAGE</text>
+  </g>
+  <g stroke="#00ff88" stroke-width="1">
+    <path d="M4 32 h100" opacity="0.25"/>
+    <path d="M4 35 h60" opacity="0.15"/>
+  </g>
+</svg>

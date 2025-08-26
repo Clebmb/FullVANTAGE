@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Black+Ops+One&display=swap');
+
+html, body, .page, main, article.content {
+  height: 100%;
+  min-height: 100%;
+}
+
+html, body {
+  margin: 0;
+  background: #000;
+  color: #00ff88;
+  /* Pixelated terminal vibe */
+  font-family: 'VT323', Consolas, 'Courier New', monospace;
+}
+
+a, .btn-link {
+  color: #00ff88;
+  text-decoration: none;
+}
+
+.btn-primary, button, .btn {
+  color: #001b0f;
+  background-color: #00ff88;
+  border: 1px solid #00d474;
+  padding: 0.5rem 0.9rem;
+  border-radius: 3px;
+}
+
+.btn-primary:hover, button:hover, .btn:hover {
+  filter: brightness(1.1);
+}
+
+.top-row, header, .navbar {
+  background: #000 !important;
+  border-bottom: 1px solid #003a24;
+}
+
+.content {
+  padding: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border-bottom: 1px solid #003a24;
+  padding: 0.5rem;
+}
+
+.alert-info {
+  background: #00190f;
+  border: 1px solid #003a24;
+  color: #00ff88;
+  padding: 0.5rem 0.75rem;
+  border-radius: 3px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-text {
+  /* Hacker-style bold brand */
+  font-family: 'Black Ops One', Impact, Haettenschweiler, 'Arial Black', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #00ff88;
+}
+
+.nav-link {
+  color: #00ff88;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+/* Agents table: yellow text */
+.table-terminal,
+.table-terminal th,
+.table-terminal td {
+  color: #ffd700; /* yellow */
+}
+
+/* Offline status in red */
+.status-offline {
+  color: #ff4d4d; /* red */
+  font-weight: 700;
+}
