@@ -16,3 +16,4 @@ C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\
 C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.pdb
 C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.genruntimeconfig.cache
 C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\ref\FullVantage.Builder.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.sourcelink.json

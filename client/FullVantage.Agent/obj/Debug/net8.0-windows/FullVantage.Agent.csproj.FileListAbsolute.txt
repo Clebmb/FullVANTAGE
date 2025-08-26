@@ -83,3 +83,4 @@ C:\Users\cmanb\Desktop\FullVANTAGE\client\FullVantage.Agent\bin\Debug\net8.0-win
 C:\Users\cmanb\Desktop\FullVANTAGE\client\FullVantage.Agent\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
 C:\Users\cmanb\Desktop\FullVANTAGE\client\FullVantage.Agent\bin\Debug\net8.0-windows\runtimes\unix\lib\net8.0\System.Management.Automation.dll
 C:\Users\cmanb\Desktop\FullVANTAGE\client\FullVantage.Agent\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Management.Automation.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\client\FullVantage.Agent\obj\Debug\net8.0-windows\FullVantage.Agent.sourcelink.json

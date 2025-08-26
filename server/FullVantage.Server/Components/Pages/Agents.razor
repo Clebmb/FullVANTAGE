@@ -81,5 +81,5 @@ else
     private NavigationManager NavigationManager { get; set; } = default!;
 
     private static string GetStatusClass(AgentStatus status)
-        => status == AgentStatus.Offline ? "status-offline" : null;
+        => status == AgentStatus.Offline ? "status-offline" : string.Empty;
 }

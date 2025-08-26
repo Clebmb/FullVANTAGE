@@ -1,0 +1,12 @@
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\bin\Release\net8.0\FullVantage.Shared.deps.json
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\bin\Release\net8.0\FullVantage.Shared.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\bin\Release\net8.0\FullVantage.Shared.pdb
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.AssemblyInfoInputs.cache
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.AssemblyInfo.cs
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.csproj.CoreCompileInputs.cache
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.sourcelink.json
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\refint\FullVantage.Shared.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\FullVantage.Shared.pdb
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Release\net8.0\ref\FullVantage.Shared.dll

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FullVantage.Builder")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0c6bb3f961030afad47d9db3cfa6b4bbdf41b204")]
 [assembly: System.Reflection.AssemblyProductAttribute("FullVantage.Builder")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FullVantage.Builder")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

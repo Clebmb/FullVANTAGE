@@ -9,3 +9,4 @@ C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Debug\net8.0\Fu
 C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Debug\net8.0\refint\FullVantage.Shared.dll
 C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Debug\net8.0\FullVantage.Shared.pdb
 C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Debug\net8.0\ref\FullVantage.Shared.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\shared\FullVantage.Shared\obj\Debug\net8.0\FullVantage.Shared.sourcelink.json

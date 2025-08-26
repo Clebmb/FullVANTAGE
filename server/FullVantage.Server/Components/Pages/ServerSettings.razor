@@ -1,0 +1,75 @@
+@page "/server-settings"
+@inject IHttpClientFactory HttpFactory
+
+<h3>Server Settings</h3>
+<p>Configure the server bind URL. Saving requires a manual restart to take effect.</p>
+
+<div class="row g-2">
+  <div class="col-md-2">
+    <label>Scheme</label>
+    <select class="form-select" @bind=Scheme>
+      <option>http</option>
+      <option>https</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label>Host</label>
+    <input class="form-control" @bind=Host />
+  </div>
+  <div class="col-md-2">
+    <label>Port</label>
+    <input type="number" class="form-control" @bind=Port />
+  </div>
+  <div class="col-md-2 d-flex align-items-end">
+    <button class="btn btn-primary w-100" @onclick=SaveAsync>Save</button>
+  </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Status))
+{
+  <div class="alert alert-info mt-3">@Status</div>
+}
+
+@code {
+  private string Scheme = "http";
+  private string Host = "localhost";
+  private int Port = 5118;
+  private string? Status;
+
+  protected override async Task OnInitializedAsync()
+  {
+    try
+    {
+      var client = HttpFactory.CreateClient();
+      client.BaseAddress = new Uri(NavigationManager.BaseUri);
+      var info = await client.GetFromJsonAsync<ServerInfo>("/api/server-info");
+      if (info is not null && Uri.TryCreate(info.Url, UriKind.Absolute, out var u))
+      {
+        Scheme = u.Scheme;
+        Host = u.Host;
+        Port = u.Port;
+      }
+    }
+    catch { }
+  }
+
+  [Inject]
+  private NavigationManager NavigationManager { get; set; } = default!;
+
+  private async Task SaveAsync()
+  {
+    var client = HttpFactory.CreateClient();
+    client.BaseAddress = new Uri(NavigationManager.BaseUri);
+    var resp = await client.PostAsJsonAsync("/api/server-config", new { Host, Port, Scheme });
+    if (resp.IsSuccessStatusCode)
+    {
+      Status = "Saved. Please restart the server to apply the new bind URL.";
+    }
+    else
+    {
+      Status = "Failed to save: " + resp.StatusCode;
+    }
+  }
+
+  private sealed class ServerInfo { public string Url { get; set; } = string.Empty; }
+}

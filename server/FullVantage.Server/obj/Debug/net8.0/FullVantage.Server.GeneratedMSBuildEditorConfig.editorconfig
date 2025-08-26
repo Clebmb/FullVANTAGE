@@ -26,6 +26,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBZ2VudHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/cmanb/Desktop/FullVANTAGE/server/FullVantage.Server/Components/Pages/Builder.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xCdWlsZGVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/cmanb/Desktop/FullVANTAGE/server/FullVantage.Server/Components/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDb3VudGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -36,6 +40,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/cmanb/Desktop/FullVANTAGE/server/FullVantage.Server/Components/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/cmanb/Desktop/FullVANTAGE/server/FullVantage.Server/Components/Pages/ServerSettings.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTZXJ2ZXJTZXR0aW5ncy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/cmanb/Desktop/FullVANTAGE/server/FullVantage.Server/Components/Pages/Weather.razor]

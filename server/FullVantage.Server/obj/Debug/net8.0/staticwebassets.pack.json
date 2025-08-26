@@ -21,6 +21,10 @@
       "PackagePath": "staticwebassets\\favicon.png"
     },
     {
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\js\\fullvantage.js",
+      "PackagePath": "staticwebassets\\js\\fullvantage.js"
+    },
+    {
       "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\logo-fullvantage.svg",
       "PackagePath": "staticwebassets\\logo-fullvantage.svg"
     },

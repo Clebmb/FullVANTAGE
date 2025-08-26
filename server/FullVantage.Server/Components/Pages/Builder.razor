@@ -1,0 +1,64 @@
+@page "/builder"
+@inject IHttpClientFactory HttpFactory
+
+<h3>Client Builder</h3>
+
+<div class="alert alert-info">Generate a client configured to connect back to your server.</div>
+
+<div class="row g-2">
+  <div class="col-md-2">
+    <label>Scheme</label>
+    <select class="form-select" @bind=Scheme>
+      <option>http</option>
+      <option>https</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label>Host</label>
+    <input class="form-control" @bind=Host />
+  </div>
+  <div class="col-md-2">
+    <label>Port</label>
+    <input type="number" class="form-control" @bind=Port />
+  </div>
+  <div class="col-md-2 d-flex align-items-end">
+    <a class="btn btn-primary w-100" href="@BuildUrl" target="_blank" rel="noopener">Download Agent ZIP</a>
+  </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Status))
+{
+  <div class="alert alert-info mt-3">@Status</div>
+}
+
+@code {
+  private string Scheme = "http";
+  private string Host = "localhost";
+  private int Port = 5118;
+  private string? Status = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    // Try to pull current server info as a convenience
+    try
+    {
+      var client = HttpFactory.CreateClient();
+      client.BaseAddress = new Uri(NavigationManager.BaseUri);
+      var info = await client.GetFromJsonAsync<ServerInfo>("/api/server-info");
+      if (info is not null && Uri.TryCreate(info.Url, UriKind.Absolute, out var u))
+      {
+        Scheme = u.Scheme;
+        Host = u.Host;
+        Port = u.Port;
+      }
+    }
+    catch { }
+  }
+
+  [Inject]
+  private NavigationManager NavigationManager { get; set; } = default!;
+
+  private string BuildUrl => $"/api/build-agent?host={Uri.EscapeDataString(Host)}&port={Port}&scheme={Uri.EscapeDataString(Scheme)}&_ts={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+
+  private sealed class ServerInfo { public string Url { get; set; } = string.Empty; }
+}

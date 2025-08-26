@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Text.Json;
 using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,8 +17,20 @@ public class AgentRunner
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Make configurable via builder; for now, fallback to env var FULLVANTAGE_SERVER or default https://localhost:5001
-        var serverUrl = Environment.GetEnvironmentVariable("FULLVANTAGE_SERVER") ?? FullVantage.Shared.Defaults.DevServerUrl;
+        // Resolve server URL from local config file, env var, or default
+        var serverUrl = TryLoadConfigServerUrl()
+            ?? Environment.GetEnvironmentVariable("FULLVANTAGE_SERVER")
+            ?? FullVantage.Shared.Defaults.DevServerUrl;
+        // Normalize
+        if (serverUrl.EndsWith("/", StringComparison.Ordinal)) serverUrl = serverUrl.TrimEnd('/');
+
+        // Persist the resolved URL for troubleshooting
+        try
+        {
+            var usedPath = Path.Combine(AppContext.BaseDirectory, "agent.used.url.txt");
+            File.WriteAllText(usedPath, $"{DateTimeOffset.Now:u} -> {serverUrl}{Environment.NewLine}");
+        }
+        catch { }
         var hubUrl = new Uri(new Uri(serverUrl), "/hubs/agent").ToString();
 
         _connection = new HubConnectionBuilder()
@@ -109,4 +123,25 @@ public class AgentRunner
             return Task.CompletedTask;
         }
     }
+
+    private static string? TryLoadConfigServerUrl()
+    {
+        try
+        {
+            // Look for agent.config.json next to the executable
+            var exeDir = AppContext.BaseDirectory;
+            var cfgPath = Path.Combine(exeDir, "agent.config.json");
+            if (!File.Exists(cfgPath)) return null;
+            var json = File.ReadAllText(cfgPath);
+            var cfg = JsonSerializer.Deserialize<AgentConfig>(json);
+            var url = cfg?.ServerUrl?.Trim();
+            return string.IsNullOrWhiteSpace(url) ? null : url;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private sealed record AgentConfig(string? ServerUrl);
 }

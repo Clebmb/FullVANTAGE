@@ -75,3 +75,4 @@ C:\Users\cmanb\Desktop\FullVANTAGE\server\FullVantage.Server\obj\Debug\net8.0\re
 C:\Users\cmanb\Desktop\FullVANTAGE\server\FullVantage.Server\obj\Debug\net8.0\FullVantage.Server.pdb
 C:\Users\cmanb\Desktop\FullVANTAGE\server\FullVantage.Server\obj\Debug\net8.0\FullVantage.Server.genruntimeconfig.cache
 C:\Users\cmanb\Desktop\FullVANTAGE\server\FullVantage.Server\obj\Debug\net8.0\ref\FullVantage.Server.dll
+C:\Users\cmanb\Desktop\FullVANTAGE\server\FullVantage.Server\obj\Debug\net8.0\FullVantage.Server.sourcelink.json
