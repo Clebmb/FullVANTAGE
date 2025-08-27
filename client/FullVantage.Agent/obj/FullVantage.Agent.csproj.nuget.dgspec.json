@@ -50,10 +50,6 @@
             "Microsoft.AspNetCore.SignalR.Client": {
               "target": "Package",
               "version": "[9.0.8, )"
-            },
-            "System.Management.Automation": {
-              "target": "Package",
-              "version": "[7.4.3, )"
             }
           },
           "imports": [

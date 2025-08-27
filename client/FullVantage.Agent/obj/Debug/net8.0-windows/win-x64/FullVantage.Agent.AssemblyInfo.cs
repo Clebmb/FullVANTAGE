@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FullVantage.Agent")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+44478d1fc14b744e051dba6fb8795ae852bdd5c6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+75a7e794dc18b24a5ea77e5e4201aa48b371bcb7")]
 [assembly: System.Reflection.AssemblyProductAttribute("FullVantage.Agent")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FullVantage.Agent")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

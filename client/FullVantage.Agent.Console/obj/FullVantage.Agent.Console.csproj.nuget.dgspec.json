@@ -56,10 +56,6 @@
               "target": "Package",
               "version": "[8.0.19, )",
               "autoReferenced": true
-            },
-            "System.Management.Automation": {
-              "target": "Package",
-              "version": "[7.4.3, )"
             }
           },
           "imports": [

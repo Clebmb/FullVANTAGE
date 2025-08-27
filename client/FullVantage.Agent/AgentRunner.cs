@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
 using FullVantage.Shared;
@@ -111,38 +110,89 @@ public class AgentRunner
 
         try
         {
-            using var ps = PowerShell.Create();
-            
-            // Try to suppress snap-in loading errors by setting error action preference
-            ps.AddScript("$ErrorActionPreference = 'SilentlyContinue'");
-            ps.Invoke();
-            ps.Commands.Clear();
-            
-            ps.AddScript(req.ScriptOrCommand);
-
-            ps.Streams.Error.DataAdded += async (s, e) =>
+            // Use direct process execution to avoid PowerShell SDK issues
+            var startInfo = new ProcessStartInfo
             {
-                var rec = ((PSDataCollection<ErrorRecord>)s!)[e.Index];
-                var chunk = new CommandChunk(req.CommandId, _agentId, "stderr", rec.ToString() ?? string.Empty, false);
-                
-                // Notify UI of output
-                CommandOutputReceived?.Invoke(this, chunk);
-                
-                await SafeSendAsync(chunk);
+                FileName = "powershell.exe",
+                Arguments = $"-Command \"{req.ScriptOrCommand}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+                StandardErrorEncoding = System.Text.Encoding.UTF8
+            };
+
+            using var process = new Process { StartInfo = startInfo };
+            
+            // Set up output collection
+            var outputBuilder = new System.Text.StringBuilder();
+            var errorBuilder = new System.Text.StringBuilder();
+            
+            process.OutputDataReceived += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    outputBuilder.AppendLine(e.Data);
+                    var chunk = new CommandChunk(req.CommandId, _agentId, "stdout", e.Data, false);
+                    CommandOutputReceived?.Invoke(this, chunk);
+                    _ = SafeSendAsync(chunk);
+                }
+            };
+            
+            process.ErrorDataReceived += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                {
+                    errorBuilder.AppendLine(e.Data);
+                    var chunk = new CommandChunk(req.CommandId, _agentId, "stderr", e.Data, false);
+                    CommandOutputReceived?.Invoke(this, chunk);
+                    _ = SafeSendAsync(chunk);
+                }
             };
 
             Console.WriteLine("Executing PowerShell command...");
-            var output = await Task.Run(() => ps.Invoke(), cts.Token);
-            Console.WriteLine($"PowerShell execution completed. Output count: {output.Count}");
             
-            foreach (var item in output)
+            if (!process.Start())
             {
-                var chunk = new CommandChunk(req.CommandId, _agentId, "stdout", item?.ToString() ?? string.Empty, false);
-                
-                // Notify UI of output
-                CommandOutputReceived?.Invoke(this, chunk);
-                
-                await SafeSendAsync(chunk);
+                throw new InvalidOperationException("Failed to start PowerShell process");
+            }
+            
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            
+            // Wait for completion with timeout
+            var completed = await Task.Run(() => process.WaitForExit((int)timeout.TotalMilliseconds), cts.Token);
+            
+            if (!completed)
+            {
+                try { process.Kill(); } catch { }
+                throw new OperationCanceledException("Command timed out");
+            }
+            
+            Console.WriteLine($"PowerShell execution completed. Exit code: {process.ExitCode}");
+            
+            // Send any remaining output
+            if (outputBuilder.Length > 0)
+            {
+                var output = outputBuilder.ToString().TrimEnd('\r', '\n');
+                if (!string.IsNullOrEmpty(output))
+                {
+                    var chunk = new CommandChunk(req.CommandId, _agentId, "stdout", output, false);
+                    CommandOutputReceived?.Invoke(this, chunk);
+                    await SafeSendAsync(chunk);
+                }
+            }
+            
+            if (errorBuilder.Length > 0)
+            {
+                var error = errorBuilder.ToString().TrimEnd('\r', '\n');
+                if (!string.IsNullOrEmpty(error))
+                {
+                    var chunk = new CommandChunk(req.CommandId, _agentId, "stderr", error, false);
+                    CommandOutputReceived?.Invoke(this, chunk);
+                    await SafeSendAsync(chunk);
+                }
             }
         }
         catch (OperationCanceledException)
