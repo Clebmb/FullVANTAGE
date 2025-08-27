@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using FullVantage.Shared;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Components;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -156,9 +157,10 @@ app.MapGet("/api/build-agent", async (string host, int port, string? scheme, str
 
     // Create a simple launcher script that embeds the server URL
     var launcherPath = Path.Combine(publishDir, "RunAgent.bat");
+    var agentExe = agentType == "console" ? "FullVantage.Agent.Console.exe" : "FullVantage.Agent.exe";
     var launcherContent = $"@echo off\r\n" +
                          $"set \"FULLVANTAGE_SERVER={serverUrl}\"\r\n" +
-                         $"\"%~dp0FullVantage.Agent.exe\"\r\n" +
+                         $"\"%~dp0{agentExe}\"\r\n" +
                          $"pause";
     await File.WriteAllTextAsync(launcherPath, launcherContent);
 
@@ -188,6 +190,10 @@ app.MapGet("/api/build-agent", async (string host, int port, string? scheme, str
 
 // List agents
 app.MapGet("/api/agents", (AgentRegistry registry) => Results.Ok(registry.List()));
+
+// Get command outputs for an agent
+app.MapGet("/api/agents/{agentId}/outputs", (string agentId, AgentRegistry registry) => 
+    Results.Ok(registry.GetCommandOutputs(agentId)));
 
 // Client builder: publish agent with embedded config and return zip
 app.MapPost("/api/build-agent", async ([FromBody] BuildRequest req, IWebHostEnvironment env) =>

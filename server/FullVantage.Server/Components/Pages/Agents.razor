@@ -1,7 +1,11 @@
 @page "/agents"
+@rendermode InteractiveServer
 @using System.Net.Http.Json
 @using FullVantage.Shared
+@using FullVantage.Server.Services
 @inject IHttpClientFactory HttpFactory
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <h3>Agents</h3>
 
@@ -15,6 +19,7 @@ else if (_agents.Count == 0)
 }
 else
 {
+    <p>Found @_agents.Count agent(s)</p>
     <table class="table table-terminal">
         <thead>
             <tr>
@@ -36,7 +41,9 @@ else
                 <td><span class="@GetStatusClass(a.Status)">@a.Status</span></td>
                 <td>@a.LastSeenUtc</td>
                 <td>
-                    <button class="btn btn-primary" @onclick="() => SendHello(a.AgentId)">Send test command</button>
+                    <button class="btn btn-primary btn-sm" @onclick="() => SendTestCommand(a.AgentId)" type="button" style="border: 2px solid red;">Test Command</button>
+                    <button class="btn btn-success btn-sm" @onclick="() => ShowCommandDialog(a.AgentId)" type="button" style="border: 2px solid red;">PowerShell</button>
+                    <button class="btn btn-info btn-sm" @onclick="() => ShowOutputs(a.AgentId)" type="button" style="border: 2px solid red;">View Outputs</button>
                 </td>
             </tr>
         }
@@ -49,19 +56,106 @@ else
     <div class="alert alert-info">@_status</div>
 }
 
+<!-- PowerShell Command Dialog -->
+@if (_showCommandDialog)
+{
+    <div class="modal-overlay" @onclick="CloseCommandDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h4>PowerShell Command - @_selectedAgentId</h4>
+                <button class="btn-close" @onclick="CloseCommandDialog">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">PowerShell Command:</label>
+                    <textarea class="form-control" rows="4" @bind="_commandText" placeholder="Enter PowerShell command here..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Timeout (seconds):</label>
+                    <input type="number" class="form-control" @bind="_commandTimeout" min="10" max="300" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseCommandDialog">Cancel</button>
+                <button class="btn btn-primary" @onclick="ExecuteCommand" disabled="@(_isExecuting)">Execute</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Command Outputs Dialog -->
+@if (_showOutputsDialog)
+{
+    <div class="modal-overlay" @onclick="CloseOutputsDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h4>Command Outputs - @_selectedAgentId</h4>
+                <button class="btn-close" @onclick="CloseOutputsDialog">&times;</button>
+            </div>
+            <div class="modal-body">
+                @if (_commandOutputs is null)
+                {
+                    <p>Loading outputs...</p>
+                }
+                else if (_commandOutputs.Count == 0)
+                {
+                    <p>No command outputs yet.</p>
+                }
+                else
+                {
+                    <div class="output-container">
+                        @foreach (var output in _commandOutputs.OrderBy(o => o.Timestamp))
+                        {
+                            <div class="output-line @(output.Stream == "stderr" ? "error" : "stdout")">
+                                <span class="timestamp">[@output.Timestamp.ToString("HH:mm:ss")]</span>
+                                <span class="stream">[@output.Stream.ToUpper()]</span>
+                                <span class="data">@output.Data</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseOutputsDialog">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<AgentInfo>? _agents;
     private string? _status;
+    
+    // Command dialog state
+    private bool _showCommandDialog = false;
+    private string _selectedAgentId = "";
+    private string _commandText = "";
+    private int _commandTimeout = 30;
+    private bool _isExecuting = false;
+    
+    // Outputs dialog state
+    private bool _showOutputsDialog = false;
+    private List<CommandOutput>? _commandOutputs;
 
     protected override async Task OnInitializedAsync()
     {
-        var client = HttpFactory.CreateClient();
-        client.BaseAddress = new Uri(NavigationManager.BaseUri);
-        _agents = await client.GetFromJsonAsync<List<AgentInfo>>("/api/agents");
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            _agents = await client.GetFromJsonAsync<List<AgentInfo>>("/api/agents");
+        }
+        catch (Exception ex)
+        {
+            _status = $"Error loading agents: {ex.Message}";
+        }
     }
 
-    private async Task SendHello(string agentId)
+    private async Task SendTestCommand(string agentId)
     {
+        _status = $"Sending test command to {agentId}...";
+        StateHasChanged();
+        
         var client = HttpFactory.CreateClient();
         client.BaseAddress = new Uri(NavigationManager.BaseUri);
         var req = new CommandRequest(
@@ -72,13 +166,86 @@ else
             Timeout: TimeSpan.FromSeconds(30)
         );
         var resp = await client.PostAsJsonAsync($"/api/agents/{agentId}/commands", req);
-        _status = resp.IsSuccessStatusCode ? $"Sent command {req.CommandId} to {agentId}" : $"Failed to send: {resp.StatusCode}";
+        _status = resp.IsSuccessStatusCode ? $"Sent test command {req.CommandId} to {agentId}" : $"Failed to send: {resp.StatusCode}";
         // Refresh list to update LastSeen
         _agents = await client.GetFromJsonAsync<List<AgentInfo>>("/api/agents");
+        StateHasChanged();
     }
 
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
+    private void ShowCommandDialog(string agentId)
+    {
+        _selectedAgentId = agentId;
+        _commandText = "";
+        _commandTimeout = 30;
+        _showCommandDialog = true;
+    }
+
+    private void CloseCommandDialog()
+    {
+        _showCommandDialog = false;
+        _selectedAgentId = "";
+        _commandText = "";
+    }
+
+    private async Task ExecuteCommand()
+    {
+        if (string.IsNullOrWhiteSpace(_commandText))
+        {
+            _status = "Please enter a command";
+            return;
+        }
+
+        _isExecuting = true;
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            var req = new CommandRequest(
+                CommandId: Guid.NewGuid().ToString("N"),
+                AgentId: _selectedAgentId,
+                Shell: "powershell",
+                ScriptOrCommand: _commandText,
+                Timeout: TimeSpan.FromSeconds(_commandTimeout)
+            );
+            var resp = await client.PostAsJsonAsync($"/api/agents/{_selectedAgentId}/commands", req);
+            if (resp.IsSuccessStatusCode)
+            {
+                _status = $"Executing command: {_commandText}";
+                CloseCommandDialog();
+            }
+            else
+            {
+                _status = $"Failed to execute command: {resp.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _status = $"Error executing command: {ex.Message}";
+        }
+        finally
+        {
+            _isExecuting = false;
+        }
+    }
+
+    private async Task ShowOutputs(string agentId)
+    {
+        _selectedAgentId = agentId;
+        _showOutputsDialog = true;
+        
+        var client = HttpFactory.CreateClient();
+        client.BaseAddress = new Uri(NavigationManager.BaseUri);
+        _commandOutputs = await client.GetFromJsonAsync<List<CommandOutput>>($"/api/agents/{agentId}/outputs");
+    }
+
+    private void CloseOutputsDialog()
+    {
+        _showOutputsDialog = false;
+        _selectedAgentId = "";
+        _commandOutputs = null;
+    }
+
+
 
     private static string GetStatusClass(AgentStatus status)
         => status == AgentStatus.Offline ? "status-offline" : string.Empty;

@@ -9,6 +9,7 @@ public class AgentRegistry
 {
     private readonly ConcurrentDictionary<string, AgentInfo> _agents = new();
     private readonly ConcurrentDictionary<string, string> _connectionToAgent = new();
+    private readonly ConcurrentDictionary<string, List<CommandOutput>> _commandOutputs = new();
 
     public void Upsert(AgentHello hello)
     {
@@ -50,5 +51,25 @@ public class AgentRegistry
         }
     }
 
+    public void AddCommandOutput(string agentId, CommandOutput output)
+    {
+        if (!_commandOutputs.ContainsKey(agentId))
+        {
+            _commandOutputs[agentId] = new List<CommandOutput>();
+        }
+        _commandOutputs[agentId].Add(output);
+        
+        // Keep only last 100 outputs per agent
+        if (_commandOutputs[agentId].Count > 100)
+        {
+            _commandOutputs[agentId].RemoveRange(0, _commandOutputs[agentId].Count - 100);
+        }
+    }
+
     public IReadOnlyCollection<AgentInfo> List() => _agents.Values.ToArray();
+    
+    public IReadOnlyCollection<CommandOutput> GetCommandOutputs(string agentId)
+    {
+        return _commandOutputs.TryGetValue(agentId, out var outputs) ? outputs.ToArray() : Array.Empty<CommandOutput>();
+    }
 }

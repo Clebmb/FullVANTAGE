@@ -5,8 +5,253 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FullVantage.Agent"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="FullVantage Agent" Height="600" Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#f8f9fa">
+    
+    <Window.Resources>
+        <Style x:Key="StatusIndicator" TargetType="Ellipse">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="Fill" Value="Green"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+        
+        <Style x:Key="CommandOutputStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+        
+        <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#495057"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="FullVantage Agent" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="#212529"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Remote Management Agent" 
+                       FontSize="14" 
+                       Foreground="#6c757d"
+                       HorizontalAlignment="Center"
+                       Margin="0,5,0,0"/>
+        </StackPanel>
+        
+        <!-- Status Bar -->
+        <Border Grid.Row="1" 
+                Background="White" 
+                BorderBrush="#dee2e6" 
+                BorderThickness="1" 
+                CornerRadius="8"
+                Padding="15"
+                Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Ellipse x:Name="StatusIndicator" 
+                             Style="{StaticResource StatusIndicator}"
+                             Fill="Gray"/>
+                    <TextBlock x:Name="StatusText" 
+                               Text="Connecting..." 
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <TextBlock Text="Agent ID: " 
+                               Foreground="#6c757d"/>
+                    <TextBlock x:Name="AgentIdText" 
+                               Text="..." 
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Command History -->
+            <Border Grid.Column="0" 
+                    Background="White" 
+                    BorderBrush="#dee2e6" 
+                    BorderThickness="1" 
+                    CornerRadius="8"
+                    Padding="15">
+                <StackPanel>
+                    <TextBlock Text="Command History" 
+                               Style="{StaticResource HeaderTextStyle}"/>
+                    
+                    <ScrollViewer x:Name="CommandHistoryScroll" 
+                                  VerticalScrollBarVisibility="Auto"
+                                  MaxHeight="300">
+                        <ItemsControl x:Name="CommandHistoryItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#f8f9fa" 
+                                            BorderBrush="#dee2e6" 
+                                            BorderThickness="1" 
+                                            CornerRadius="4"
+                                            Padding="10"
+                                            Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding CommandId}" 
+                                                           FontWeight="SemiBold" 
+                                                           Foreground="#495057"/>
+                                                <TextBlock Grid.Column="1" 
+                                                           Text="{Binding Timestamp, StringFormat='HH:mm:ss'}" 
+                                                           Foreground="#6c757d" 
+                                                           FontSize="11"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding ScriptOrCommand}" 
+                                                       Style="{StaticResource CommandOutputStyle}"
+                                                       Foreground="#212529"
+                                                       Background="#e9ecef"
+                                                       Padding="5"
+                                                       Margin="0,5,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <TextBlock x:Name="NoCommandsText" 
+                               Text="No commands received yet" 
+                               Foreground="#6c757d" 
+                               HorizontalAlignment="Center"
+                               Margin="0,20,0,0"/>
+                </StackPanel>
+            </Border>
+            
+            <!-- Live Output -->
+            <Border Grid.Column="2" 
+                    Background="White" 
+                    BorderBrush="#dee2e6" 
+                    BorderThickness="1" 
+                    CornerRadius="8"
+                    Padding="15">
+                <StackPanel>
+                    <TextBlock Text="Live Output" 
+                               Style="{StaticResource HeaderTextStyle}"/>
+                    
+                    <ScrollViewer x:Name="OutputScroll" 
+                                  VerticalScrollBarVisibility="Auto"
+                                  MaxHeight="300">
+                        <ItemsControl x:Name="OutputItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#f8f9fa" 
+                                            BorderBrush="#dee2e6" 
+                                            BorderThickness="1" 
+                                            CornerRadius="4"
+                                            Padding="8"
+                                            Margin="0,0,0,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" 
+                                                       Text="{Binding Stream}" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{Binding StreamColor}"
+                                                       Margin="0,0,10,0"
+                                                       MinWidth="50"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding Data}" 
+                                                       Style="{StaticResource CommandOutputStyle}"
+                                                       Foreground="#212529"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <TextBlock x:Name="NoOutputText" 
+                               Text="No output yet" 
+                               Foreground="#6c757d" 
+                               HorizontalAlignment="Center"
+                               Margin="0,20,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+        
+        <!-- Footer -->
+        <Border Grid.Row="3" 
+                Background="White" 
+                BorderBrush="#dee2e6" 
+                BorderThickness="1" 
+                CornerRadius="8"
+                Padding="15"
+                Margin="0,20,0,0">
     <Grid>
-
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0">
+                    <TextBlock x:Name="MachineInfoText" 
+                               Text="Machine: ..." 
+                               Foreground="#6c757d"/>
+                    <TextBlock x:Name="UserInfoText" 
+                               Text="User: ..." 
+                               Foreground="#6c757d"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="ClearHistoryBtn" 
+                            Content="Clear History" 
+                            Click="ClearHistory_Click"
+                            Style="{StaticResource ResourceKey={x:Type Button}}"
+                            Background="#6c757d"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Padding="15,8"
+                            Margin="0,0,10,0"/>
+                    <Button x:Name="RefreshBtn" 
+                            Content="Refresh" 
+                            Click="Refresh_Click"
+                            Style="{StaticResource ResourceKey={x:Type Button}}"
+                            Background="#007bff"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Padding="15,8"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

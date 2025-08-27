@@ -45,11 +45,6 @@ public partial class App : Application
             var state = new ConsentState { Accepted = true, AcceptedAtUtc = DateTimeOffset.UtcNow };
             File.WriteAllText(consentPath, JsonSerializer.Serialize(state));
         }
-
-        // Start runner
-        var runner = new AgentRunner();
-        // Fire-and-forget start; attach to discard to avoid CS4014 warning
-        _ = runner.StartAsync();
     }
 }
 

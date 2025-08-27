@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "DSrBcx/n0tgMyBKo3D3igZTgqpMAdWjQNBYbP+0G5bA=",
+  "Hash": "c2EJTp6uZcc2CA2lJHIKFfuhKKvfn5yuDXNpIvzEDfM=",
   "Source": "FullVantage.Server",
   "BasePath": "_content/FullVantage.Server",
   "Mode": "Default",
@@ -129,6 +129,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.png"
+    },
+    {
+      "Identity": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\fullvantage.gif",
+      "SourceId": "FullVantage.Server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\",
+      "BasePath": "_content/FullVantage.Server",
+      "RelativePath": "fullvantage.gif",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\fullvantage.gif"
     },
     {
       "Identity": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\js\\fullvantage.js",

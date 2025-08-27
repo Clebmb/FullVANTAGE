@@ -47,6 +47,16 @@ public record CommandChunk
     bool IsFinal
 );
 
+public record CommandOutput
+(
+    string CommandId,
+    string AgentId,
+    string Stream,
+    string Data,
+    DateTimeOffset Timestamp,
+    bool IsFinal
+);
+
 public record SystemInfo
 (
     string AgentId,

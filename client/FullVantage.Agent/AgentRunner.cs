@@ -14,6 +14,15 @@ public class AgentRunner
 {
     private HubConnection? _connection;
     private readonly string _agentId = Guid.NewGuid().ToString("N");
+    
+    // Events for UI updates
+    public event EventHandler<CommandRequest>? CommandReceived;
+    public event EventHandler<CommandChunk>? CommandOutputReceived;
+    public event EventHandler<AgentStatus>? StatusChanged;
+    
+    // Public properties
+    public string AgentId => _agentId;
+    public AgentStatus CurrentStatus { get; private set; } = AgentStatus.Unknown;
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
@@ -46,6 +55,9 @@ public class AgentRunner
                 return;
             }
 
+            // Notify UI that command was received
+            CommandReceived?.Invoke(this, req);
+            
             await RunPowerShellAndStreamAsync(req);
         });
 
@@ -54,8 +66,29 @@ public class AgentRunner
             await RegisterAsync();
         };
 
-        await _connection.StartAsync(cancellationToken);
-        await RegisterAsync();
+        _connection.Closed += async (_) =>
+        {
+            UpdateStatus(AgentStatus.Offline);
+        };
+
+        try
+        {
+            await _connection.StartAsync(cancellationToken);
+            UpdateStatus(AgentStatus.Online);
+            await RegisterAsync();
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus(AgentStatus.Offline);
+            // Log error or show in UI
+            Console.WriteLine($"Failed to connect: {ex.Message}");
+        }
+    }
+
+    private void UpdateStatus(AgentStatus status)
+    {
+        CurrentStatus = status;
+        StatusChanged?.Invoke(this, status);
     }
 
     private async Task RegisterAsync()
@@ -79,35 +112,64 @@ public class AgentRunner
         try
         {
             using var ps = PowerShell.Create();
+            
+            // Try to suppress snap-in loading errors by setting error action preference
+            ps.AddScript("$ErrorActionPreference = 'SilentlyContinue'");
+            ps.Invoke();
+            ps.Commands.Clear();
+            
             ps.AddScript(req.ScriptOrCommand);
 
             ps.Streams.Error.DataAdded += async (s, e) =>
             {
                 var rec = ((PSDataCollection<ErrorRecord>)s!)[e.Index];
                 var chunk = new CommandChunk(req.CommandId, _agentId, "stderr", rec.ToString() ?? string.Empty, false);
+                
+                // Notify UI of output
+                CommandOutputReceived?.Invoke(this, chunk);
+                
                 await SafeSendAsync(chunk);
             };
 
+            Console.WriteLine("Executing PowerShell command...");
             var output = await Task.Run(() => ps.Invoke(), cts.Token);
+            Console.WriteLine($"PowerShell execution completed. Output count: {output.Count}");
+            
             foreach (var item in output)
             {
                 var chunk = new CommandChunk(req.CommandId, _agentId, "stdout", item?.ToString() ?? string.Empty, false);
+                
+                // Notify UI of output
+                CommandOutputReceived?.Invoke(this, chunk);
+                
                 await SafeSendAsync(chunk);
             }
         }
         catch (OperationCanceledException)
         {
             var chunk = new CommandChunk(req.CommandId, _agentId, "stderr", "Command timed out.", false);
+            
+            // Notify UI of output
+            CommandOutputReceived?.Invoke(this, chunk);
+            
             await SafeSendAsync(chunk);
         }
         catch (Exception ex)
         {
             var chunk = new CommandChunk(req.CommandId, _agentId, "stderr", ex.ToString(), false);
+            
+            // Notify UI of output
+            CommandOutputReceived?.Invoke(this, chunk);
+            
             await SafeSendAsync(chunk);
         }
         finally
         {
             var final = new CommandChunk(req.CommandId, _agentId, "stdout", string.Empty, true);
+            
+            // Notify UI of final output
+            CommandOutputReceived?.Invoke(this, final);
+            
             await SafeSendAsync(final);
         }
     }

@@ -35,11 +35,29 @@ public class AgentHub : Hub
         Console.WriteLine($"Agent registered: {hello.AgentId} ({hello.MachineName} / {hello.UserName})");
     }
 
+    public Task Heartbeat(string agentId)
+    {
+        // Update last seen timestamp for the agent
+        _registry.SetLastSeen(agentId);
+        Console.WriteLine($"Heartbeat received from agent: {agentId}");
+        return Task.CompletedTask;
+    }
+
     public Task CommandOutput(CommandChunk chunk)
     {
-        // Relay to any listening admin clients (optional: add a separate admin hub later)
-        // For now, store in registry (last output) and no-op
+        // Store command output in registry
+        var output = new CommandOutput(
+            chunk.CommandId,
+            chunk.AgentId,
+            chunk.Stream,
+            chunk.Data,
+            DateTimeOffset.UtcNow,
+            chunk.IsFinal);
+        
+        _registry.AddCommandOutput(chunk.AgentId, output);
         _registry.SetLastSeen(chunk.AgentId);
-        return Task.CompletedTask;
+        
+        // Broadcast to all admin clients
+        return Clients.All.SendAsync("CommandOutputReceived", output);
     }
 }

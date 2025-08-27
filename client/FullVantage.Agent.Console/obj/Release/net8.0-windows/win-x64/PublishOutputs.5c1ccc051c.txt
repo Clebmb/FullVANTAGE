@@ -1,0 +1,6 @@
+C:\Users\cmanb\AppData\Local\Temp\fullvantage-build\420d199254cf4413a5939d949e50c6a0\publish\microsoft.management.infrastructure.native.unmanaged.dll
+C:\Users\cmanb\AppData\Local\Temp\fullvantage-build\420d199254cf4413a5939d949e50c6a0\publish\PowerShell.Core.Instrumentation.dll
+C:\Users\cmanb\AppData\Local\Temp\fullvantage-build\420d199254cf4413a5939d949e50c6a0\publish\pwrshplugin.dll
+C:\Users\cmanb\AppData\Local\Temp\fullvantage-build\420d199254cf4413a5939d949e50c6a0\publish\getfilesiginforedist.dll
+C:\Users\cmanb\AppData\Local\Temp\fullvantage-build\420d199254cf4413a5939d949e50c6a0\publish\FullVantage.Shared.pdb
+C:\Users\cmanb\AppData\Local\Temp\fullvantage-build\420d199254cf4413a5939d949e50c6a0\publish\FullVantage.Agent.Console.exe
