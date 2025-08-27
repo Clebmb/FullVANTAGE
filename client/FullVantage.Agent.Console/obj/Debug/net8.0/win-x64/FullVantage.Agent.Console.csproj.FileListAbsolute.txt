@@ -1,0 +1,5 @@
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\client\FullVantage.Agent.Console\obj\Debug\net8.0\win-x64\FullVantage.Agent.Console.csproj.AssemblyReference.cache
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\client\FullVantage.Agent.Console\obj\Debug\net8.0\win-x64\FullVantage.Agent.Console.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\client\FullVantage.Agent.Console\obj\Debug\net8.0\win-x64\FullVantage.Agent.Console.AssemblyInfoInputs.cache
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\client\FullVantage.Agent.Console\obj\Debug\net8.0\win-x64\FullVantage.Agent.Console.AssemblyInfo.cs
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\client\FullVantage.Agent.Console\obj\Debug\net8.0\win-x64\FullVantage.Agent.Console.csproj.CoreCompileInputs.cache

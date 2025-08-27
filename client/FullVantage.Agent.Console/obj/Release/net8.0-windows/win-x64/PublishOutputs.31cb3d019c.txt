@@ -1,0 +1,6 @@
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\test-console-publish\microsoft.management.infrastructure.native.unmanaged.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\test-console-publish\PowerShell.Core.Instrumentation.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\test-console-publish\pwrshplugin.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\test-console-publish\getfilesiginforedist.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\test-console-publish\FullVantage.Shared.pdb
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\test-console-publish\FullVantage.Agent.Console.exe

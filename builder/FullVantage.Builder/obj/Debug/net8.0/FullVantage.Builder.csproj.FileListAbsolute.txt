@@ -17,3 +17,22 @@ C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\
 C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.genruntimeconfig.cache
 C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\ref\FullVantage.Builder.dll
 C:\Users\cmanb\Desktop\FullVANTAGE\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.sourcelink.json
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Builder.exe
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Builder.deps.json
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Builder.runtimeconfig.json
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Builder.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Builder.pdb
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Shared.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\bin\Debug\net8.0\FullVantage.Shared.pdb
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.csproj.AssemblyReference.cache
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.AssemblyInfoInputs.cache
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.AssemblyInfo.cs
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.csproj.CoreCompileInputs.cache
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.sourcelink.json
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVant.F5C0A32C.Up2Date
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\refint\FullVantage.Builder.dll
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.pdb
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\FullVantage.Builder.genruntimeconfig.cache
+C:\Users\cmanb\Desktop\FullVANTAGE - Copy\builder\FullVantage.Builder\obj\Debug\net8.0\ref\FullVantage.Builder.dll

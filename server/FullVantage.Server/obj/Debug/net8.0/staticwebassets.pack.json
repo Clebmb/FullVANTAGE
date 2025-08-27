@@ -1,31 +1,31 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\FullVantage.Server.bundle.scp.css",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\FullVantage.Server.bundle.scp.css",
       "PackagePath": "staticwebassets\\FullVantage.Server.bundle.scp.css"
     },
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\app.css",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\app.css",
       "PackagePath": "staticwebassets\\app.css"
     },
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\bootstrap\\bootstrap.min.css",
       "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
     },
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\bootstrap\\bootstrap.min.css.map",
       "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
     },
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\favicon.png",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\favicon.png",
       "PackagePath": "staticwebassets\\favicon.png"
     },
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\js\\fullvantage.js",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\js\\fullvantage.js",
       "PackagePath": "staticwebassets\\js\\fullvantage.js"
     },
     {
-      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\wwwroot\\logo-fullvantage.svg",
+      "Id": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\wwwroot\\logo-fullvantage.svg",
       "PackagePath": "staticwebassets\\logo-fullvantage.svg"
     },
     {

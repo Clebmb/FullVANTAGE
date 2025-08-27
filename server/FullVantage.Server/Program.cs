@@ -110,15 +110,25 @@ app.MapPost("/api/server-config", async ([FromBody] ServerConfigRequest req, IWe
 }).DisableAntiforgery();
 
 // GET variant for direct download via navigation
-app.MapGet("/api/build-agent", async (string host, int port, string? scheme, IWebHostEnvironment env) =>
+app.MapGet("/api/build-agent", async (string host, int port, string? scheme, string? type, IWebHostEnvironment env) =>
 {
     var schemeVal = string.IsNullOrWhiteSpace(scheme) ? "http" : scheme;
     var hostVal = string.IsNullOrWhiteSpace(host) ? "localhost" : host;
     var portVal = port <= 0 ? new Uri(Defaults.DevServerUrl).Port : port;
     var serverUrl = $"{schemeVal}://{hostVal}:{portVal}";
+    var agentType = string.IsNullOrWhiteSpace(type) ? "console" : type;
 
     var contentRoot = env.ContentRootPath;
-    var clientProj = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "client", "FullVantage.Agent", "FullVantage.Agent.csproj"));
+    string clientProj;
+    if (agentType == "console")
+    {
+        clientProj = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "client", "FullVantage.Agent.Console", "FullVantage.Agent.Console.csproj"));
+    }
+    else
+    {
+        clientProj = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "client", "FullVantage.Agent", "FullVantage.Agent.csproj"));
+    }
+    
     if (!File.Exists(clientProj)) return Results.Problem($"Client project not found at {clientProj}");
 
     var workDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "fullvantage-build", Guid.NewGuid().ToString("N")));
@@ -127,7 +137,9 @@ app.MapGet("/api/build-agent", async (string host, int port, string? scheme, IWe
     var psi = new ProcessStartInfo
     {
         FileName = "dotnet",
-        Arguments = $"publish \"{clientProj}\" -c Release -o \"{publishDir}\"",
+        Arguments = agentType == "console" 
+            ? $"publish \"{clientProj}\" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o \"{publishDir}\""
+            : $"publish \"{clientProj}\" -c Release -r win-x64 --self-contained true -o \"{publishDir}\"",
         RedirectStandardOutput = true,
         RedirectStandardError = true,
         UseShellExecute = false,
@@ -142,15 +154,31 @@ app.MapGet("/api/build-agent", async (string host, int port, string? scheme, IWe
         return Results.Problem($"dotnet publish failed: {stderr}\n{stdout}");
     }
 
-    var cfgPath = Path.Combine(publishDir, "agent.config.json");
-    await File.WriteAllTextAsync(cfgPath, JsonSerializer.Serialize(new { ServerUrl = serverUrl }, new JsonSerializerOptions { WriteIndented = true }));
+    // Create a simple launcher script that embeds the server URL
+    var launcherPath = Path.Combine(publishDir, "RunAgent.bat");
+    var launcherContent = $"@echo off\r\n" +
+                         $"set \"FULLVANTAGE_SERVER={serverUrl}\"\r\n" +
+                         $"\"%~dp0FullVantage.Agent.exe\"\r\n" +
+                         $"pause";
+    await File.WriteAllTextAsync(launcherPath, launcherContent);
 
-    // Convenience launcher that sets env var and runs the agent
-    var runCmd = Path.Combine(publishDir, "RunAgent.cmd");
-    var cmd = "@echo off\r\n" +
-              $"set \"FULLVANTAGE_SERVER={serverUrl}\"\r\n" +
-              "start \"\" \"%~dp0FullVantage.Agent.exe\"\r\n";
-    await File.WriteAllTextAsync(runCmd, cmd);
+    // Create a simple text file with just the server URL
+    var serverTxtPath = Path.Combine(publishDir, "server.txt");
+    await File.WriteAllTextAsync(serverTxtPath, serverUrl);
+
+    // Create a README with usage instructions
+    var readmePath = Path.Combine(publishDir, "README.txt");
+    var agentName = agentType == "console" ? "FullVantage.Agent.Console.exe" : "FullVantage.Agent.exe";
+    var readmeContent = $"FullVANTAGE {(agentType == "console" ? "Console " : "")}Agent\r\n" +
+                       $"================\r\n\r\n" +
+                       $"Server URL: {serverUrl}\r\n" +
+                       $"Agent Type: {(agentType == "console" ? "Console (Single File)" : "WPF (Multiple Files)")}\r\n\r\n" +
+                       $"Usage:\r\n" +
+                       $"1. Run 'RunAgent.bat' to start the agent\r\n" +
+                       $"2. Or run '{agentName}' directly\r\n\r\n" +
+                       $"Note: This is a self-contained executable that includes the .NET runtime.\r\n" +
+                       $"The agent will automatically connect to: {serverUrl}";
+    await File.WriteAllTextAsync(readmePath, readmeContent);
 
     var zipPath = Path.Combine(workDir.FullName, "FullVantage.Agent.zip");
     ZipFile.CreateFromDirectory(publishDir, zipPath);
@@ -168,20 +196,32 @@ app.MapPost("/api/build-agent", async ([FromBody] BuildRequest req, IWebHostEnvi
     var host = string.IsNullOrWhiteSpace(req.Host) ? "localhost" : req.Host;
     var port = req.Port <= 0 ? new Uri(Defaults.DevServerUrl).Port : req.Port;
     var serverUrl = $"{scheme}://{host}:{port}";
+    var agentType = string.IsNullOrWhiteSpace(req.Type) ? "console" : req.Type;
 
     // Paths
     var contentRoot = env.ContentRootPath; // server/FullVantage.Server
-    var clientProj = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "client", "FullVantage.Agent", "FullVantage.Agent.csproj"));
+    string clientProj;
+    if (agentType == "console")
+    {
+        clientProj = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "client", "FullVantage.Agent.Console", "FullVantage.Agent.Console.csproj"));
+    }
+    else
+    {
+        clientProj = Path.GetFullPath(Path.Combine(contentRoot, "..", "..", "client", "FullVantage.Agent", "FullVantage.Agent.csproj"));
+    }
+    
     if (!File.Exists(clientProj)) return Results.Problem($"Client project not found at {clientProj}");
 
     var workDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "fullvantage-build", Guid.NewGuid().ToString("N")));
     var publishDir = Path.Combine(workDir.FullName, "publish");
 
-    // Publish agent
+    // Publish agent as self-contained executable
     var psi = new ProcessStartInfo
     {
         FileName = "dotnet",
-        Arguments = $"publish \"{clientProj}\" -c Release -o \"{publishDir}\"",
+        Arguments = agentType == "console"
+            ? $"publish \"{clientProj}\" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o \"{publishDir}\""
+            : $"publish \"{clientProj}\" -c Release -r win-x64 --self-contained true -o \"{publishDir}\"",
         RedirectStandardOutput = true,
         RedirectStandardError = true,
         UseShellExecute = false,
@@ -196,16 +236,31 @@ app.MapPost("/api/build-agent", async ([FromBody] BuildRequest req, IWebHostEnvi
         return Results.Problem($"dotnet publish failed: {stderr}\n{stdout}");
     }
 
-    // Write agent.config.json
-    var cfgPath = Path.Combine(publishDir, "agent.config.json");
-    await File.WriteAllTextAsync(cfgPath, JsonSerializer.Serialize(new { ServerUrl = serverUrl }, new JsonSerializerOptions { WriteIndented = true }));
+    // Create a simple launcher script that embeds the server URL
+    var launcherPath = Path.Combine(publishDir, "RunAgent.bat");
+    var launcherContent = $"@echo off\r\n" +
+                         $"set \"FULLVANTAGE_SERVER={serverUrl}\"\r\n" +
+                         $"\"%~dp0FullVantage.Agent.exe\"\r\n" +
+                         $"pause";
+    await File.WriteAllTextAsync(launcherPath, launcherContent);
 
-    // Convenience launcher that sets env var and runs the agent
-    var runCmd = Path.Combine(publishDir, "RunAgent.cmd");
-    var cmd = "@echo off\r\n" +
-              $"set \"FULLVANTAGE_SERVER={serverUrl}\"\r\n" +
-              "start \"\" \"%~dp0FullVantage.Agent.exe\"\r\n";
-    await File.WriteAllTextAsync(runCmd, cmd);
+    // Create a simple text file with just the server URL
+    var serverTxtPath = Path.Combine(publishDir, "server.txt");
+    await File.WriteAllTextAsync(serverTxtPath, serverUrl);
+
+    // Create a README with usage instructions
+    var readmePath = Path.Combine(publishDir, "README.txt");
+    var agentName = agentType == "console" ? "FullVantage.Agent.Console.exe" : "FullVantage.Agent.exe";
+    var readmeContent = $"FullVANTAGE {(agentType == "console" ? "Console " : "")}Agent\r\n" +
+                       $"================\r\n\r\n" +
+                       $"Server URL: {serverUrl}\r\n" +
+                       $"Agent Type: {(agentType == "console" ? "Console (Single File)" : "WPF (Multiple Files)")}\r\n\r\n" +
+                       $"Usage:\r\n" +
+                       $"1. Run 'RunAgent.bat' to start the agent\r\n" +
+                       $"2. Or run '{agentName}' directly\r\n\r\n" +
+                       $"Note: This is a self-contained executable that includes the .NET runtime.\r\n" +
+                       $"The agent will automatically connect to: {serverUrl}";
+    await File.WriteAllTextAsync(readmePath, readmeContent);
 
     // Zip output
     var zipPath = Path.Combine(workDir.FullName, "FullVantage.Agent.zip");
@@ -217,5 +272,5 @@ app.MapPost("/api/build-agent", async ([FromBody] BuildRequest req, IWebHostEnvi
 
 app.Run();
 
-public record BuildRequest(string Host, int Port, string? Scheme);
+public record BuildRequest(string Host, int Port, string? Scheme, string? Type);
 public record ServerConfigRequest(string Host, int Port, string? Scheme);

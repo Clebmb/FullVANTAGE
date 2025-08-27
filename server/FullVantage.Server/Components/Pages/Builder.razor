@@ -3,9 +3,9 @@
 
 <h3>Client Builder</h3>
 
-<div class="alert alert-info">Generate a client configured to connect back to your server.</div>
+<div class="alert alert-info">Generate a self-contained agent executable configured to connect back to your server.</div>
 
-<div class="row g-2">
+<div class="row g-2 mb-3">
   <div class="col-md-2">
     <label>Scheme</label>
     <select class="form-select" @bind=Scheme>
@@ -21,8 +21,26 @@
     <label>Port</label>
     <input type="number" class="form-control" @bind=Port />
   </div>
-  <div class="col-md-2 d-flex align-items-end">
-    <a class="btn btn-primary w-100" href="@BuildUrl" target="_blank" rel="noopener">Download Agent ZIP</a>
+  <div class="col-md-2">
+    <label>Agent Type</label>
+    <select class="form-select" @bind=AgentType>
+      <option value="console">Console (Single File)</option>
+      <option value="wpf">WPF (Multiple Files)</option>
+    </select>
+  </div>
+</div>
+
+<div class="row g-2">
+  <div class="col-md-6">
+    <a class="btn btn-primary w-100" href="@BuildUrl" target="_blank" rel="noopener">
+      Download @(AgentType == "console" ? "Console" : "WPF") Agent
+    </a>
+  </div>
+  <div class="col-md-6">
+    <div class="alert alert-info mb-0">
+      <strong>Console Agent:</strong> Single executable (~37MB), no GUI, perfect for servers and automation.<br/>
+      <strong>WPF Agent:</strong> Multiple files (~100MB), includes GUI, better for desktop use.
+    </div>
   </div>
 </div>
 
@@ -35,6 +53,7 @@
   private string Scheme = "http";
   private string Host = "localhost";
   private int Port = 5118;
+  private string AgentType = "console";
   private string? Status = string.Empty;
 
   protected override async Task OnInitializedAsync()
@@ -58,7 +77,7 @@
   [Inject]
   private NavigationManager NavigationManager { get; set; } = default!;
 
-  private string BuildUrl => $"/api/build-agent?host={Uri.EscapeDataString(Host)}&port={Port}&scheme={Uri.EscapeDataString(Scheme)}&_ts={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+  private string BuildUrl => $"/api/build-agent?host={Uri.EscapeDataString(Host)}&port={Port}&scheme={Uri.EscapeDataString(Scheme)}&type={AgentType}&_ts={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
 
   private sealed class ServerInfo { public string Url { get; set; } = string.Empty; }
 }

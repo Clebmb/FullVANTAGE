@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FullVantage.Shared")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0c6bb3f961030afad47d9db3cfa6b4bbdf41b204")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5fc10eac598b7085023f661ebb39d669bb2dd38e")]
 [assembly: System.Reflection.AssemblyProductAttribute("FullVantage.Shared")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FullVantage.Shared")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

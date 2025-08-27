@@ -128,14 +128,26 @@ public class AgentRunner
     {
         try
         {
-            // Look for agent.config.json next to the executable
+            // Look for agent.config.json next to the executable (legacy support)
             var exeDir = AppContext.BaseDirectory;
             var cfgPath = Path.Combine(exeDir, "agent.config.json");
-            if (!File.Exists(cfgPath)) return null;
-            var json = File.ReadAllText(cfgPath);
-            var cfg = JsonSerializer.Deserialize<AgentConfig>(json);
-            var url = cfg?.ServerUrl?.Trim();
-            return string.IsNullOrWhiteSpace(url) ? null : url;
+            if (File.Exists(cfgPath))
+            {
+                var json = File.ReadAllText(cfgPath);
+                var cfg = JsonSerializer.Deserialize<AgentConfig>(json);
+                var url = cfg?.ServerUrl?.Trim();
+                if (!string.IsNullOrWhiteSpace(url)) return url;
+            }
+
+            // Check for a simple .txt file with just the URL (simpler approach)
+            var txtPath = Path.Combine(exeDir, "server.txt");
+            if (File.Exists(txtPath))
+            {
+                var url = File.ReadAllText(txtPath).Trim();
+                if (!string.IsNullOrWhiteSpace(url)) return url;
+            }
+
+            return null;
         }
         catch
         {

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\client\\FullVantage.Agent\\FullVantage.Agent.csproj": {}
+    "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\client\\FullVantage.Agent\\FullVantage.Agent.csproj": {}
   },
   "projects": {
-    "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\client\\FullVantage.Agent\\FullVantage.Agent.csproj": {
+    "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\client\\FullVantage.Agent\\FullVantage.Agent.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\client\\FullVantage.Agent\\FullVantage.Agent.csproj",
+        "projectUniqueName": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\client\\FullVantage.Agent\\FullVantage.Agent.csproj",
         "projectName": "FullVantage.Agent",
-        "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\client\\FullVantage.Agent\\FullVantage.Agent.csproj",
+        "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\client\\FullVantage.Agent\\FullVantage.Agent.csproj",
         "packagesPath": "C:\\Users\\cmanb\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\client\\FullVantage.Agent\\obj\\",
+        "outputPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\client\\FullVantage.Agent\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\cmanb\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -26,8 +26,8 @@
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj": {
-                "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj"
+              "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj": {
+                "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj"
               }
             }
           }
@@ -67,6 +67,24 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[8.0.19, 8.0.19]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Crossgen2.win-x64",
+              "version": "[8.0.19, 8.0.19]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[8.0.19, 8.0.19]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+              "version": "[8.0.19, 8.0.19]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
@@ -77,16 +95,21 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
         }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
+        }
       }
     },
-    "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj": {
+    "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj",
+        "projectUniqueName": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj",
         "projectName": "FullVantage.Shared",
-        "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj",
+        "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj",
         "packagesPath": "C:\\Users\\cmanb\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\obj\\",
+        "outputPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\cmanb\\AppData\\Roaming\\NuGet\\NuGet.Config"

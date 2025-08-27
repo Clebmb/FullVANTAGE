@@ -1284,11 +1284,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\FullVantage.Server.csproj",
+      "projectUniqueName": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\FullVantage.Server.csproj",
       "projectName": "FullVantage.Server",
-      "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\FullVantage.Server.csproj",
+      "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\FullVantage.Server.csproj",
       "packagesPath": "C:\\Users\\cmanb\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\obj\\",
+      "outputPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\cmanb\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -1303,8 +1303,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj": {
-              "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj"
+            "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj": {
+              "projectPath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\shared\\FullVantage.Shared\\FullVantage.Shared.csproj"
             }
           }
         }

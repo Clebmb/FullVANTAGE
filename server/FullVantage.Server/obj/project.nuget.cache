@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "xohbGqrHFvc=",
+  "dgSpecHash": "RirIB1QDdPQ=",
   "success": true,
-  "projectFilePath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE\\server\\FullVantage.Server\\FullVantage.Server.csproj",
+  "projectFilePath": "C:\\Users\\cmanb\\Desktop\\FullVANTAGE - Copy\\server\\FullVantage.Server\\FullVantage.Server.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\cmanb\\.nuget\\packages\\microsoft.data.sqlite.core\\9.0.8\\microsoft.data.sqlite.core.9.0.8.nupkg.sha512",
     "C:\\Users\\cmanb\\.nuget\\packages\\microsoft.entityframeworkcore\\9.0.8\\microsoft.entityframeworkcore.9.0.8.nupkg.sha512",
