@@ -72,4 +72,14 @@ public class AgentRegistry
     {
         return _commandOutputs.TryGetValue(agentId, out var outputs) ? outputs.ToArray() : Array.Empty<CommandOutput>();
     }
+    
+    public bool HasActiveConnection(string agentId)
+    {
+        return _connectionToAgent.Values.Any(id => id == agentId);
+    }
+    
+    public int GetConnectionCount(string agentId)
+    {
+        return _connectionToAgent.Values.Count(id => id == agentId);
+    }
 }

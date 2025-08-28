@@ -1,0 +1,566 @@
+@page "/file-manager"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using FullVantage.Shared
+@using FullVantage.Server.Services
+@inject IHttpClientFactory HttpFactory
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject FileBrowserService FileBrowser
+
+<h3>File Manager</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Agents</h5>
+            </div>
+            <div class="card-body">
+                @if (_agents is null)
+                {
+                    <p>Loading agents...</p>
+                }
+                else if (_agents.Count == 0)
+                {
+                    <p>No agents available.</p>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var agent in _agents)
+                        {
+                            <button class="list-group-item list-group-item-action @(agent.AgentId == _selectedAgentId ? "active" : "")"
+                                    @onclick="() => SelectAgent(agent.AgentId)">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1 me-2">
+                                        <strong>@agent.MachineName</strong><br/>
+                                        <small>@agent.UserName</small><br/>
+                                        <small class="text-muted">@agent.AgentId</small>
+                                    </div>
+                                    <span class="badge @(agent.Status == AgentStatus.Online ? "bg-success" : "bg-secondary") flex-shrink-0">
+                                        @agent.Status
+                                    </span>
+                                </div>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        @if (string.IsNullOrEmpty(_selectedAgentId))
+        {
+            <div class="alert alert-info">
+                Select an agent to manage files.
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5>File Browser - @(_agents?.FirstOrDefault(a => a.AgentId == _selectedAgentId)?.MachineName)</h5>
+                        <div>
+                            <button class="btn btn-primary btn-sm" @onclick="RefreshCurrentPath">Refresh</button>
+                            <button class="btn btn-success btn-sm" @onclick="ShowUploadDialog">Upload</button>
+                            <button class="btn btn-info btn-sm" @onclick="ShowDownloadDialog">Download</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" @bind="_currentPath" placeholder="Enter path..." />
+                            <button class="btn btn-outline-secondary" @onclick="NavigateToPath">Go</button>
+                        </div>
+                    </div>
+
+                                         @if (_currentDirectory is null)
+                     {
+                         <div class="alert alert-info">
+                             <p>Loading directory...</p>
+                             <small>Selected Agent: @_selectedAgentId</small><br/>
+                             <small>Current Path: @_currentPath</small><br/>
+                             <small>Last Request: @DateTime.Now.ToString("HH:mm:ss")</small>
+                         </div>
+                     }
+                     else
+                     {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Size</th>
+                                        <th>Modified</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (_currentPath != "C:\\" && _currentPath != "/")
+                                    {
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-level-up-alt text-success"></i>
+                                                <span class="text-success cursor-pointer" @onclick="() => NavigateToParent()" style="cursor: pointer;">..</span>
+                                            </td>
+                                            <td class="text-success">-</td>
+                                            <td class="text-success">-</td>
+                                            <td class="text-success">-</td>
+                                        </tr>
+                                    }
+                                    @foreach (var dir in _currentDirectory.Directories)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-folder text-success"></i>
+                                                <span class="text-success cursor-pointer" @onclick="() => NavigateToDirectory(dir.FullPath)" style="cursor: pointer;">@dir.Name</span>
+                                            </td>
+                                            <td class="text-success">-</td>
+                                            <td class="text-success">@dir.LastModified.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-success" @onclick="() => ShowFileInfo(dir.FullPath)">Info</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @foreach (var file in _currentDirectory.Files)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-file text-success"></i>
+                                                <span class="text-success">@file.Name</span>
+                                            </td>
+                                            <td class="text-success">@FormatFileSize(file.Size)</td>
+                                            <td class="text-success">@file.LastModified.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-success" @onclick="() => ShowFileInfo(file.FullPath)">Info</button>
+                                                <button class="btn btn-sm btn-outline-success" @onclick="() => DownloadFile(file.FullPath)">Download</button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteFile(file.FullPath)">Delete</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Upload Dialog -->
+@if (_showUploadDialog)
+{
+    <div class="modal-overlay" @onclick="CloseUploadDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h4>Upload File to Agent</h4>
+                <button class="btn-close" @onclick="CloseUploadDialog">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Source File Path (Server):</label>
+                    <input type="text" class="form-control" @bind="_uploadSourcePath" placeholder="C:\path\to\file.txt" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Destination Path (Agent):</label>
+                    <input type="text" class="form-control" @bind="_uploadDestPath" placeholder="C:\path\to\destination\file.txt" />
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="_uploadOverwrite" id="uploadOverwrite" />
+                        <label class="form-check-label" for="uploadOverwrite">
+                            Overwrite existing file
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseUploadDialog">Cancel</button>
+                <button class="btn btn-primary" @onclick="ExecuteUpload" disabled="@(_isUploading)">Upload</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Download Dialog -->
+@if (_showDownloadDialog)
+{
+    <div class="modal-overlay" @onclick="CloseDownloadDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h4>Download File from Agent</h4>
+                <button class="btn-close" @onclick="CloseDownloadDialog">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Source Path (Agent):</label>
+                    <input type="text" class="form-control" @bind="_downloadSourcePath" placeholder="C:\path\to\file.txt" />
+                </div>
+                <div class="mb-3">
+                    <label class="label">Destination Path (Server):</label>
+                    <input type="text" class="form-control" @bind="_downloadDestPath" placeholder="C:\path\to\destination\file.txt" />
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="_downloadOverwrite" id="downloadOverwrite" />
+                        <label class="form-check-label" for="downloadOverwrite">
+                            Overwrite existing file
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseDownloadDialog">Cancel</button>
+                <button class="btn btn-primary" @onclick="ExecuteDownload" disabled="@(_isDownloading)">Download</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- File Info Dialog -->
+@if (_showFileInfoDialog)
+{
+    <div class="modal-overlay" @onclick="CloseFileInfoDialog">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h4>File Information</h4>
+                <button class="btn-close" @onclick="CloseFileInfoDialog">&times;</button>
+            </div>
+            <div class="modal-body">
+                @if (_currentFileInfo is null)
+                {
+                    <p class="text-success">Loading file information...</p>
+                }
+                else
+                {
+                    <table class="table table-borderless">
+                        <tr><td class="text-success"><strong>Name:</strong></td><td class="text-success">@_currentFileInfo.Name</td></tr>
+                        <tr><td class="text-success"><strong>Path:</strong></td><td class="text-success">@_currentFileInfo.FullPath</td></tr>
+                        <tr><td class="text-success"><strong>Size:</strong></td><td class="text-success">@FormatFileSize(_currentFileInfo.Size)</td></tr>
+                        <tr><td class="text-success"><strong>Type:</strong></td><td class="text-success">@(_currentFileInfo.IsDirectory ? "Directory" : "File")</td></tr>
+                        <tr><td class="text-success"><strong>Modified:</strong></td><td class="text-success">@_currentFileInfo.LastModified.ToString("yyyy-MM-dd HH:mm:ss")</td></tr>
+                        @if (!string.IsNullOrEmpty(_currentFileInfo.Attributes))
+                        {
+                            <tr><td class="text-success"><strong>Attributes:</strong></td><td class="text-success">@_currentFileInfo.Attributes</td></tr>
+                        }
+                        @if (!string.IsNullOrEmpty(_currentFileInfo.Owner))
+                        {
+                            <tr><td class="text-success"><strong>Owner:</strong></td><td class="text-success">@_currentFileInfo.Owner</td></tr>
+                        }
+                    </table>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseFileInfoDialog">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<AgentInfo>? _agents;
+    private string _selectedAgentId = "";
+    private string _currentPath = "C:\\";
+    private DirectoryListing? _currentDirectory;
+    private FileInfo? _currentFileInfo;
+    
+    // Upload dialog state
+    private bool _showUploadDialog = false;
+    private string _uploadSourcePath = "";
+    private string _uploadDestPath = "";
+    private bool _uploadOverwrite = false;
+    private bool _isUploading = false;
+    
+    // Download dialog state
+    private bool _showDownloadDialog = false;
+    private string _downloadSourcePath = "";
+    private string _downloadDestPath = "";
+    private bool _downloadOverwrite = false;
+    private bool _isDownloading = false;
+    
+    // File info dialog state
+    private bool _showFileInfoDialog = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAgents();
+    }
+
+    private async Task LoadAgents()
+    {
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            _agents = await client.GetFromJsonAsync<List<AgentInfo>>("/api/agents");
+        }
+        catch (Exception ex)
+        {
+            // Handle error silently for now
+        }
+    }
+
+    private void SelectAgent(string agentId)
+    {
+        _selectedAgentId = agentId;
+        _currentPath = "C:\\";
+        _ = LoadDirectoryListing();
+    }
+
+    private async Task LoadDirectoryListing()
+    {
+        if (string.IsNullOrEmpty(_selectedAgentId)) 
+        {
+            return;
+        }
+
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            
+            // Request directory listing from agent
+            var response = await client.GetAsync($"/api/agents/{_selectedAgentId}/files/listing?path={Uri.EscapeDataString(_currentPath)}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Wait a bit for the agent to respond, then check the service
+                await Task.Delay(1000);
+                
+                // Check if we have a response from the agent
+                var listing = FileBrowser.GetDirectoryListing(_selectedAgentId, _currentPath);
+                
+                if (listing != null)
+                {
+                    _currentDirectory = listing;
+                    StateHasChanged();
+                }
+                else
+                {
+                    // If no response yet, show a loading state
+                    _currentDirectory = null;
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                // Show error state
+                _currentDirectory = null;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Show error state
+            _currentDirectory = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task NavigateToPath()
+    {
+        await LoadDirectoryListing();
+    }
+
+    private async Task NavigateToDirectory(string path)
+    {
+        _currentPath = path;
+        await LoadDirectoryListing();
+    }
+
+    private async Task NavigateToParent()
+    {
+        var parent = Path.GetDirectoryName(_currentPath);
+        if (!string.IsNullOrEmpty(parent))
+        {
+            _currentPath = parent;
+            await LoadDirectoryListing();
+        }
+    }
+
+    private async Task RefreshCurrentPath()
+    {
+        await LoadDirectoryListing();
+    }
+
+    private void ShowUploadDialog()
+    {
+        _uploadSourcePath = "";
+        _uploadDestPath = _currentPath;
+        _uploadOverwrite = false;
+        _showUploadDialog = true;
+    }
+
+    private void CloseUploadDialog()
+    {
+        _showUploadDialog = false;
+    }
+
+    private async Task ExecuteUpload()
+    {
+        if (string.IsNullOrEmpty(_uploadSourcePath) || string.IsNullOrEmpty(_uploadDestPath))
+        {
+            return;
+        }
+
+        _isUploading = true;
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            
+            var request = new FileUploadRequest(_uploadSourcePath, _uploadDestPath, _uploadOverwrite);
+            var response = await client.PostAsJsonAsync($"/api/agents/{_selectedAgentId}/files/upload", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                CloseUploadDialog();
+                // TODO: Show transfer progress
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error silently for now
+        }
+        finally
+        {
+            _isUploading = false;
+        }
+    }
+
+    private void ShowDownloadDialog()
+    {
+        _downloadSourcePath = "";
+        _downloadDestPath = "";
+        _downloadOverwrite = false;
+        _showDownloadDialog = true;
+    }
+
+    private void CloseDownloadDialog()
+    {
+        _showDownloadDialog = false;
+    }
+
+    private async Task ExecuteDownload()
+    {
+        if (string.IsNullOrEmpty(_downloadSourcePath) || string.IsNullOrEmpty(_downloadDestPath))
+        {
+            return;
+        }
+
+        _isDownloading = true;
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            
+            var request = new FileDownloadRequest(_downloadSourcePath, _downloadDestPath, _downloadOverwrite);
+            var response = await client.PostAsJsonAsync($"/api/agents/{_selectedAgentId}/files/download", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                CloseDownloadDialog();
+                // TODO: Show transfer progress
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error silently for now
+        }
+        finally
+        {
+            _isDownloading = false;
+        }
+    }
+
+    private async Task ShowFileInfo(string path)
+    {
+        _currentFileInfo = null;
+        _showFileInfoDialog = true;
+        
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            
+            // Request file info from agent
+            await client.GetAsync($"/api/agents/{_selectedAgentId}/files/info?path={Uri.EscapeDataString(path)}");
+            
+            // Wait a bit for the agent to respond, then check the service
+            await Task.Delay(500);
+            
+            // Check if we have a response from the agent
+            var fileInfo = FileBrowser.GetFileInfo(_selectedAgentId, path);
+            if (fileInfo != null)
+            {
+                _currentFileInfo = fileInfo;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error silently for now
+        }
+    }
+
+    private void CloseFileInfoDialog()
+    {
+        _showFileInfoDialog = false;
+        _currentFileInfo = null;
+    }
+
+    private async Task DownloadFile(string path)
+    {
+        _downloadSourcePath = path;
+        _downloadDestPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), Path.GetFileName(path));
+        _downloadOverwrite = false;
+        _showDownloadDialog = true;
+    }
+
+    private async Task DeleteFile(string path)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {Path.GetFileName(path)}?"))
+        {
+            return;
+        }
+
+        try
+        {
+            var client = HttpFactory.CreateClient();
+            client.BaseAddress = new Uri(NavigationManager.BaseUri);
+            
+            var request = new FileOperationRequest(
+                Guid.NewGuid().ToString("N"),
+                _selectedAgentId,
+                FileOperationType.Delete,
+                new[] { path },
+                null,
+                false
+            );
+            
+            var response = await client.PostAsJsonAsync($"/api/agents/{_selectedAgentId}/files/operations", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadDirectoryListing();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error silently for now
+        }
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024.0):F1} MB";
+        return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+    }
+}

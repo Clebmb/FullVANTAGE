@@ -1,2 +1,0 @@
-FullVANTAGE
-VANTAGE (Virtual Administration & Network Tool for Access, Governance, and Execution)

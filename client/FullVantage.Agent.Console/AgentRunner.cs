@@ -59,6 +59,23 @@ public class AgentRunner
             await RunPowerShellAndStreamAsync(req);
         });
 
+        _connection.On<string>("Registered", (agentId) =>
+        {
+            System.Console.WriteLine($"[AGENT] Received Registered confirmation from server: {agentId}");
+        });
+
+        _connection.On<string>("GetDirectoryListing", async (path) =>
+        {
+            System.Console.WriteLine($"[AGENT] Received GetDirectoryListing request for path: {path}");
+            await SendDirectoryListingAsync(path);
+        });
+
+        _connection.On<string>("GetFileInfo", async (path) =>
+        {
+            System.Console.WriteLine($"[AGENT] Received GetFileInfo request for path: {path}");
+            await SendFileInfoAsync(path);
+        });
+
         _connection.Reconnected += async (connectionId) =>
         {
             System.Console.WriteLine($"Reconnected to server with connection ID: {connectionId}");
@@ -85,10 +102,20 @@ public class AgentRunner
 
         try
         {
+            System.Console.WriteLine($"[AGENT] Starting SignalR connection...");
             await _connection.StartAsync(cancellationToken);
-            System.Console.WriteLine("Successfully connected to server");
+            System.Console.WriteLine($"[AGENT] Successfully connected to server");
+            System.Console.WriteLine($"[AGENT] Connection state: {_connection.State}");
+            System.Console.WriteLine($"[AGENT] Connection ID: {_connection.ConnectionId}");
             _isConnected = true;
+            
+            System.Console.WriteLine($"[AGENT] Waiting 1 second for connection to stabilize...");
+            await Task.Delay(1000, cancellationToken);
+            
+            System.Console.WriteLine($"[AGENT] Calling RegisterAsync...");
             await RegisterAsync();
+            
+            System.Console.WriteLine($"[AGENT] Starting heartbeat...");
             StartHeartbeat();
             
             // Keep the application running
@@ -132,15 +159,37 @@ public class AgentRunner
 
     private async Task RegisterAsync()
     {
-        if (_connection is null) return;
+        if (_connection is null) 
+        {
+            System.Console.WriteLine("[AGENT] ERROR: Connection is null, cannot register");
+            return;
+        }
+        
+        System.Console.WriteLine($"[AGENT] Starting registration process...");
+        System.Console.WriteLine($"[AGENT] Connection state: {_connection.State}");
+        System.Console.WriteLine($"[AGENT] Connection ID: {_connection.ConnectionId}");
+        
         var hello = new AgentHello(
             _agentId,
             Environment.MachineName,
             Environment.UserName,
             Environment.OSVersion.ToString(),
             Version: typeof(AgentRunner).Assembly.GetName().Version?.ToString() ?? "1.0.0");
-        await _connection.InvokeAsync("Register", hello);
-        System.Console.WriteLine($"Registered with server as agent: {_agentId}");
+            
+        System.Console.WriteLine($"[AGENT] Created AgentHello: {_agentId} ({Environment.MachineName} / {Environment.UserName})");
+        System.Console.WriteLine($"[AGENT] Calling server Register method...");
+        
+        try
+        {
+            await _connection.InvokeAsync("Register", hello);
+            System.Console.WriteLine($"[AGENT] Register method called successfully");
+            System.Console.WriteLine($"[AGENT] Registered with server as agent: {_agentId}");
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"[AGENT] ERROR calling Register method: {ex.Message}");
+            System.Console.WriteLine($"[AGENT] Exception details: {ex}");
+        }
     }
 
     private async Task RunPowerShellAndStreamAsync(CommandRequest req)
@@ -303,6 +352,117 @@ public class AgentRunner
     }
 
     private sealed record AgentConfig(string? ServerUrl);
+
+    private async Task SendDirectoryListingAsync(string path)
+    {
+        if (_connection is null) return;
+
+        try
+        {
+            var files = new List<FullVantage.Shared.FileInfo>();
+            var directories = new List<FullVantage.Shared.FileInfo>();
+            long totalSize = 0;
+            int totalCount = 0;
+
+            if (Directory.Exists(path))
+            {
+                var dirInfo = new DirectoryInfo(path);
+                
+                // Get directories
+                foreach (var dir in dirInfo.GetDirectories())
+                {
+                    directories.Add(new FullVantage.Shared.FileInfo(
+                        _agentId,
+                        dir.Name,
+                        dir.FullName,
+                        0,
+                        true,
+                        dir.LastWriteTime,
+                        dir.Attributes.ToString(),
+                        null
+                    ));
+                    totalCount++;
+                }
+
+                // Get files
+                foreach (var file in dirInfo.GetFiles())
+                {
+                    files.Add(new FullVantage.Shared.FileInfo(
+                        _agentId,
+                        file.Name,
+                        file.FullName,
+                        file.Length,
+                        false,
+                        file.LastWriteTime,
+                        file.Attributes.ToString(),
+                        null
+                    ));
+                    totalSize += file.Length;
+                    totalCount++;
+                }
+            }
+
+            var listing = new DirectoryListing(_agentId, path, files, directories, totalSize, totalCount);
+            System.Console.WriteLine($"[AGENT] Created directory listing: {files.Count} files, {directories.Count} directories");
+            
+            // Send the listing back to the server
+            System.Console.WriteLine($"[AGENT] Sending DirectoryListingResponse to server");
+            await _connection.InvokeAsync("DirectoryListingResponse", listing);
+            System.Console.WriteLine($"[AGENT] DirectoryListingResponse sent successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"[AGENT] Error getting directory listing: {ex.Message}");
+        }
+    }
+
+    private async Task SendFileInfoAsync(string path)
+    {
+        if (_connection is null) return;
+
+        try
+        {
+            FullVantage.Shared.FileInfo? fileInfo = null;
+
+            if (File.Exists(path))
+            {
+                var file = new System.IO.FileInfo(path);
+                fileInfo = new FullVantage.Shared.FileInfo(
+                    _agentId,
+                    file.Name,
+                    file.FullName,
+                    file.Length,
+                    false,
+                    file.LastWriteTime,
+                    file.Attributes.ToString(),
+                    null
+                );
+            }
+            else if (Directory.Exists(path))
+            {
+                var dir = new System.IO.DirectoryInfo(path);
+                fileInfo = new FullVantage.Shared.FileInfo(
+                    _agentId,
+                    dir.Name,
+                    dir.FullName,
+                    0,
+                    true,
+                    dir.LastWriteTime,
+                    dir.Attributes.ToString(),
+                    null
+                );
+            }
+
+            if (fileInfo != null)
+            {
+                await _connection.InvokeAsync("FileInfoResponse", fileInfo);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"[AGENT] Error getting file info: {ex.Message}");
+        }
+    }
 }
 
 public class CustomRetryPolicy : IRetryPolicy

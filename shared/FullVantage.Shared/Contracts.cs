@@ -67,3 +67,102 @@ public record SystemInfo
 );
 
 public record DiskInfo(string Name, string Format, long TotalBytes, long FreeBytes);
+
+// File Transfer Contracts
+public record FileInfo
+(
+    string AgentId,
+    string Name,
+    string FullPath,
+    long Size,
+    bool IsDirectory,
+    DateTimeOffset LastModified,
+    string? Attributes,
+    string? Owner
+);
+
+public record DirectoryListing
+(
+    string AgentId,
+    string Path,
+    IReadOnlyList<FileInfo> Files,
+    IReadOnlyList<FileInfo> Directories,
+    long TotalSize,
+    int TotalCount
+);
+
+public record FileTransferRequest
+(
+    string TransferId,
+    string AgentId,
+    string SourcePath,
+    string DestinationPath,
+    FileTransferType Type,
+    bool Overwrite,
+    int ChunkSize
+);
+
+public record FileTransferChunk
+(
+    string TransferId,
+    string AgentId,
+    int ChunkIndex,
+    int TotalChunks,
+    byte[] Data,
+    bool IsFinal
+);
+
+public record FileTransferProgress
+(
+    string TransferId,
+    string AgentId,
+    int ChunkIndex,
+    int TotalChunks,
+    long BytesTransferred,
+    long TotalBytes,
+    FileTransferStatus Status,
+    string? ErrorMessage
+);
+
+public record FileOperationRequest
+(
+    string OperationId,
+    string AgentId,
+    FileOperationType Type,
+    IReadOnlyList<string> SourcePaths,
+    string? DestinationPath,
+    bool Overwrite
+);
+
+public record FileOperationResult
+(
+    string OperationId,
+    string AgentId,
+    bool Success,
+    string? ErrorMessage,
+    IReadOnlyList<string> AffectedPaths
+);
+
+public enum FileTransferType
+{
+    Upload,     // Server -> Agent
+    Download    // Agent -> Server
+}
+
+public enum FileTransferStatus
+{
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+    Cancelled
+}
+
+public enum FileOperationType
+{
+    Copy,
+    Move,
+    Delete,
+    Rename,
+    CreateDirectory
+}

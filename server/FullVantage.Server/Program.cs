@@ -48,6 +48,8 @@ builder.Services.AddRazorComponents()
 // SignalR + registries
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<AgentRegistry>();
+builder.Services.AddSingleton<FileTransferService>();
+builder.Services.AddSingleton<FileBrowserService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
@@ -195,6 +197,79 @@ app.MapGet("/api/agents", (AgentRegistry registry) => Results.Ok(registry.List()
 app.MapGet("/api/agents/{agentId}/outputs", (string agentId, AgentRegistry registry) => 
     Results.Ok(registry.GetCommandOutputs(agentId)));
 
+// File Transfer APIs
+app.MapPost("/api/agents/{agentId}/files/upload", async (string agentId, [FromBody] FileUploadRequest req, FileTransferService fileService) =>
+{
+    var transfer = await fileService.InitiateTransferAsync(agentId, req.SourcePath, req.DestinationPath, FileTransferType.Upload, req.Overwrite);
+    return Results.Ok(transfer);
+}).DisableAntiforgery();
+
+app.MapPost("/api/agents/{agentId}/files/download", async (string agentId, [FromBody] FileDownloadRequest req, FileTransferService fileService) =>
+{
+    var transfer = await fileService.InitiateTransferAsync(agentId, req.SourcePath, req.DestinationPath, FileTransferType.Download, req.Overwrite);
+    return Results.Ok(transfer);
+}).DisableAntiforgery();
+
+app.MapPost("/api/agents/{agentId}/files/operations", async (string agentId, [FromBody] FileOperationRequest req, FileTransferService fileService) =>
+{
+    var operation = await fileService.InitiateFileOperationAsync(agentId, req.Type, req.SourcePaths, req.DestinationPath, req.Overwrite);
+    return Results.Ok(operation);
+}).DisableAntiforgery();
+
+app.MapGet("/api/agents/{agentId}/files/listing", async (string agentId, string path, IHubContext<AgentHub> hub, AgentRegistry registry) =>
+{
+    Console.WriteLine($"[API] Directory listing requested for agent {agentId} at path {path}");
+    
+    // Check if agent is registered
+    var agents = registry.List();
+    var agent = agents.FirstOrDefault(a => a.AgentId == agentId);
+    if (agent == null)
+    {
+        Console.WriteLine($"[API] ERROR: Agent {agentId} not found in registry");
+        return Results.NotFound($"Agent {agentId} not found");
+    }
+    
+    Console.WriteLine($"[API] Agent {agentId} found: {agent.MachineName} (Status: {agent.Status})");
+    
+    // Check connection status
+    var hasConnection = registry.HasActiveConnection(agentId);
+    var connectionCount = registry.GetConnectionCount(agentId);
+    Console.WriteLine($"[API] Agent {agentId} connection status: HasConnection={hasConnection}, ConnectionCount={connectionCount}");
+    
+    if (!hasConnection)
+    {
+        Console.WriteLine($"[API] ERROR: Agent {agentId} has no active connections");
+        return Results.BadRequest($"Agent {agentId} has no active connections");
+    }
+    
+    await hub.Clients.Group(agentId).SendAsync("GetDirectoryListing", path);
+    Console.WriteLine($"[API] GetDirectoryListing message sent to agent {agentId}");
+    return Results.Ok(new { Message = "Directory listing requested", Path = path });
+}).DisableAntiforgery();
+
+app.MapGet("/api/agents/{agentId}/files/info", async (string agentId, string path, IHubContext<AgentHub> hub) =>
+{
+    Console.WriteLine($"[API] File info requested for agent {agentId} at path {path}");
+    await hub.Clients.Group(agentId).SendAsync("GetFileInfo", path);
+    Console.WriteLine($"[API] GetFileInfo message sent to agent {agentId}");
+    return Results.Ok(new { Message = "File info requested", Path = path });
+}).DisableAntiforgery();
+
+app.MapGet("/api/file-transfers", (FileTransferService fileService) => Results.Ok(fileService.GetActiveTransfers()));
+app.MapGet("/api/file-operations", (FileTransferService fileService) => Results.Ok(fileService.GetActiveOperations()));
+
+app.MapDelete("/api/file-transfers/{transferId}", (string transferId, FileTransferService fileService) =>
+{
+    var cancelled = fileService.CancelTransfer(transferId);
+    return cancelled ? Results.Ok() : Results.NotFound();
+});
+
+app.MapDelete("/api/file-operations/{operationId}", (string operationId, FileTransferService fileService) =>
+{
+    var cancelled = fileService.CancelOperation(operationId);
+    return cancelled ? Results.Ok() : Results.NotFound();
+});
+
 // Client builder: publish agent with embedded config and return zip
 app.MapPost("/api/build-agent", async ([FromBody] BuildRequest req, IWebHostEnvironment env) =>
 {
@@ -280,3 +355,5 @@ app.Run();
 
 public record BuildRequest(string Host, int Port, string? Scheme, string? Type);
 public record ServerConfigRequest(string Host, int Port, string? Scheme);
+public record FileUploadRequest(string SourcePath, string DestinationPath, bool Overwrite);
+public record FileDownloadRequest(string SourcePath, string DestinationPath, bool Overwrite);

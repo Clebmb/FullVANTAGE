@@ -222,3 +222,199 @@ th, td {
   font-size: 0.875rem;
   margin: 0.125rem;
 }
+
+/* File Manager Styles */
+.card {
+  background: #000;
+  border: 1px solid #003a24;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background: #00190f;
+  border-bottom: 1px solid #003a24;
+  padding: 0.75rem 1rem;
+}
+
+.card-header h5 {
+  margin: 0;
+  color: #00ff88;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.list-group {
+  border: 1px solid #003a24;
+  border-radius: 3px;
+}
+
+.list-group-item {
+  background: #000;
+  border: none;
+  border-bottom: 1px solid #003a24;
+  color: #00ff88;
+  padding: 0.75rem;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+.list-group-item.active {
+  background: #003a24;
+  color: #00ff88;
+  border-color: #00ff88;
+}
+
+.list-group-item:hover {
+  background: #00190f;
+}
+
+.list-group-item a {
+  color: #00ff88;
+  text-decoration: none;
+}
+
+.list-group-item a:hover {
+  color: #00d474;
+  text-decoration: underline;
+}
+
+/* File browser table */
+.table-hover tbody tr:hover {
+  background: #00190f;
+}
+
+/* Progress bar */
+.progress {
+  background: #00190f;
+  border: 1px solid #003a24;
+  border-radius: 3px;
+  height: 1.5rem;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: #00ff88;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  transition: width 0.3s ease;
+}
+
+/* Badge styles */
+.badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.bg-success {
+  background: #00ff88 !important;
+  color: #000 !important;
+}
+
+.bg-warning {
+  background: #ffd700 !important;
+  color: #000 !important;
+}
+
+.bg-danger {
+  background: #ff4d4d !important;
+  color: #000 !important;
+}
+
+.bg-primary {
+  background: #0066cc !important;
+  color: #fff !important;
+}
+
+.bg-secondary {
+  background: #666 !important;
+  color: #fff !important;
+}
+
+/* Form controls */
+.form-control {
+  background: #000;
+  border: 1px solid #003a24;
+  color: #00ff88;
+  padding: 0.5rem;
+  border-radius: 3px;
+}
+
+.form-control:focus {
+  background: #00190f;
+  border-color: #00ff88;
+  color: #00ff88;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(0, 255, 136, 0.25);
+}
+
+.form-label {
+  color: #00ff88;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+  background: #000;
+  border: 1px solid #003a24;
+}
+
+.form-check-input:checked {
+  background: #00ff88;
+  border-color: #00ff88;
+}
+
+.form-check-label {
+  color: #00ff88;
+  margin-left: 0.5rem;
+}
+
+/* Input group */
+.input-group {
+  display: flex;
+}
+
+.input-group .form-control {
+  flex: 1;
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group .btn {
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Table responsive */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* File icons */
+.fas {
+  margin-right: 0.5rem;
+}
+
+.fa-folder {
+  color: #ffd700;
+}
+
+.fa-file {
+  color: #00ff88;
+}
+
+.fa-level-up-alt {
+  color: #666;
+}

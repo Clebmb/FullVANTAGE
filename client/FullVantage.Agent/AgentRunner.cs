@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FullVantage.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Collections.Generic;
 
 namespace FullVantage.Agent;
 
@@ -18,6 +19,10 @@ public class AgentRunner
     public event EventHandler<CommandRequest>? CommandReceived;
     public event EventHandler<CommandChunk>? CommandOutputReceived;
     public event EventHandler<AgentStatus>? StatusChanged;
+    public event EventHandler<FileTransferRequest>? FileTransferRequested;
+    public event EventHandler<FileOperationRequest>? FileOperationRequested;
+    public event EventHandler<string>? DirectoryListingRequested;
+    public event EventHandler<string>? FileInfoRequested;
     
     // Public properties
     public string AgentId => _agentId;
@@ -58,6 +63,36 @@ public class AgentRunner
             CommandReceived?.Invoke(this, req);
             
             await RunPowerShellAndStreamAsync(req);
+        });
+
+        // File Transfer Handlers
+        _connection.On<FileTransferRequest>("FileTransferRequested", async (req) =>
+        {
+            if (req.AgentId != _agentId) return;
+            
+            FileTransferRequested?.Invoke(this, req);
+            await HandleFileTransferAsync(req);
+        });
+
+        _connection.On<FileOperationRequest>("FileOperationRequested", async (req) =>
+        {
+            if (req.AgentId != _agentId) return;
+            
+            FileOperationRequested?.Invoke(this, req);
+            await HandleFileOperationAsync(req);
+        });
+
+        _connection.On<string>("GetDirectoryListing", async (path) =>
+        {
+            Console.WriteLine($"Received GetDirectoryListing request for path: {path}");
+            DirectoryListingRequested?.Invoke(this, path);
+            await SendDirectoryListingAsync(path);
+        });
+
+        _connection.On<string>("GetFileInfo", async (path) =>
+        {
+            FileInfoRequested?.Invoke(this, path);
+            await SendFileInfoAsync(path);
         });
 
         _connection.Reconnected += async (_) =>
@@ -224,11 +259,437 @@ public class AgentRunner
         }
     }
 
+    // File Transfer Methods
+    private async Task HandleFileTransferAsync(FileTransferRequest req)
+    {
+        if (_connection is null) return;
+
+        try
+        {
+            if (req.Type == FileTransferType.Download)
+            {
+                // Agent -> Server: Read file and send chunks
+                await SendFileToServerAsync(req);
+            }
+            else if (req.Type == FileTransferType.Upload)
+            {
+                // Server -> Agent: Receive chunks and write file
+                await ReceiveFileFromServerAsync(req);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"File transfer error: {ex.Message}");
+        }
+    }
+
+    private async Task SendFileToServerAsync(FileTransferRequest req)
+    {
+        if (!File.Exists(req.SourcePath))
+        {
+            Console.WriteLine($"Source file not found: {req.SourcePath}");
+            return;
+        }
+
+        var fileInfo = new System.IO.FileInfo(req.SourcePath);
+        var totalChunks = (int)Math.Ceiling((double)fileInfo.Length / req.ChunkSize);
+        var chunkIndex = 0;
+
+        using var fileStream = File.OpenRead(req.SourcePath);
+        var buffer = new byte[req.ChunkSize];
+
+        while (chunkIndex < totalChunks)
+        {
+            var bytesRead = await fileStream.ReadAsync(buffer, 0, req.ChunkSize);
+            var chunk = new byte[bytesRead];
+            Array.Copy(buffer, chunk, bytesRead);
+
+            var fileChunk = new FileTransferChunk(
+                req.TransferId,
+                _agentId,
+                chunkIndex,
+                totalChunks,
+                chunk,
+                chunkIndex == totalChunks - 1
+            );
+
+            await SafeSendFileChunkAsync(fileChunk);
+            chunkIndex++;
+
+            // Small delay to prevent overwhelming the connection
+            await Task.Delay(10);
+        }
+
+        Console.WriteLine($"File transfer completed: {req.SourcePath} -> {req.DestinationPath}");
+    }
+
+    private async Task ReceiveFileFromServerAsync(FileTransferRequest req)
+    {
+        // This would be implemented when the server sends file chunks
+        // For now, we'll just acknowledge the request
+        Console.WriteLine($"File upload requested: {req.SourcePath} -> {req.DestinationPath}");
+    }
+
+    private async Task HandleFileOperationAsync(FileOperationRequest req)
+    {
+        try
+        {
+            bool success = false;
+            var affectedPaths = new List<string>();
+            string? errorMessage = null;
+
+            switch (req.Type)
+            {
+                case FileOperationType.Copy:
+                    success = await CopyFilesAsync(req.SourcePaths, req.DestinationPath!, req.Overwrite);
+                    if (success) affectedPaths.AddRange(req.SourcePaths);
+                    break;
+
+                case FileOperationType.Move:
+                    success = await MoveFilesAsync(req.SourcePaths, req.DestinationPath!, req.Overwrite);
+                    if (success) affectedPaths.AddRange(req.SourcePaths);
+                    break;
+
+                case FileOperationType.Delete:
+                    success = await DeleteFilesAsync(req.SourcePaths);
+                    if (success) affectedPaths.AddRange(req.SourcePaths);
+                    break;
+
+                case FileOperationType.Rename:
+                    if (req.SourcePaths.Count == 1 && !string.IsNullOrEmpty(req.DestinationPath))
+                    {
+                        success = await RenameFileAsync(req.SourcePaths[0], req.DestinationPath, req.Overwrite);
+                        if (success) affectedPaths.Add(req.SourcePaths[0]);
+                    }
+                    break;
+
+                case FileOperationType.CreateDirectory:
+                    success = await CreateDirectoryAsync(req.SourcePaths[0]);
+                    if (success) affectedPaths.Add(req.SourcePaths[0]);
+                    break;
+            }
+
+            var result = new FileOperationResult(
+                req.OperationId,
+                _agentId,
+                success,
+                errorMessage,
+                affectedPaths
+            );
+
+            await SafeSendFileOperationResultAsync(result);
+        }
+        catch (Exception ex)
+        {
+            var result = new FileOperationResult(
+                req.OperationId,
+                _agentId,
+                false,
+                ex.Message,
+                Array.Empty<string>()
+            );
+            await SafeSendFileOperationResultAsync(result);
+        }
+    }
+
+    private async Task<bool> CopyFilesAsync(IReadOnlyList<string> sourcePaths, string destinationPath, bool overwrite)
+    {
+        try
+        {
+            foreach (var sourcePath in sourcePaths)
+            {
+                if (File.Exists(sourcePath))
+                {
+                    var fileName = Path.GetFileName(sourcePath);
+                    var destPath = Path.Combine(destinationPath, fileName);
+                    
+                    if (File.Exists(destPath) && !overwrite)
+                        continue;
+                        
+                    File.Copy(sourcePath, destPath, overwrite);
+                }
+                else if (Directory.Exists(sourcePath))
+                {
+                    var dirName = Path.GetDirectoryName(sourcePath);
+                    var destDir = Path.Combine(destinationPath, dirName!);
+                    
+                    if (Directory.Exists(destDir) && !overwrite)
+                        continue;
+                        
+                    CopyDirectory(sourcePath, destDir, overwrite);
+                }
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> MoveFilesAsync(IReadOnlyList<string> sourcePaths, string destinationPath, bool overwrite)
+    {
+        try
+        {
+            foreach (var sourcePath in sourcePaths)
+            {
+                if (File.Exists(sourcePath))
+                {
+                    var fileName = Path.GetFileName(sourcePath);
+                    var destPath = Path.Combine(destinationPath, fileName);
+                    
+                    if (File.Exists(destPath) && !overwrite)
+                        continue;
+                        
+                    File.Move(sourcePath, destPath, overwrite);
+                }
+                else if (Directory.Exists(sourcePath))
+                {
+                    var dirName = Path.GetDirectoryName(sourcePath);
+                    var destDir = Path.Combine(destinationPath, dirName!);
+                    
+                    if (Directory.Exists(destDir) && !overwrite)
+                        continue;
+                        
+                    Directory.Move(sourcePath, destDir);
+                }
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> DeleteFilesAsync(IReadOnlyList<string> sourcePaths)
+    {
+        try
+        {
+            foreach (var sourcePath in sourcePaths)
+            {
+                if (File.Exists(sourcePath))
+                {
+                    File.Delete(sourcePath);
+                }
+                else if (Directory.Exists(sourcePath))
+                {
+                    Directory.Delete(sourcePath, true);
+                }
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> RenameFileAsync(string sourcePath, string destinationPath, bool overwrite)
+    {
+        try
+        {
+            if (File.Exists(sourcePath))
+            {
+                if (File.Exists(destinationPath) && !overwrite)
+                    return false;
+                    
+                File.Move(sourcePath, destinationPath, overwrite);
+                return true;
+            }
+            else if (Directory.Exists(sourcePath))
+            {
+                if (Directory.Exists(destinationPath) && !overwrite)
+                    return false;
+                    
+                Directory.Move(sourcePath, destinationPath);
+                return true;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> CreateDirectoryAsync(string path)
+    {
+        try
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void CopyDirectory(string sourceDir, string destDir, bool overwrite)
+    {
+        var dir = new DirectoryInfo(sourceDir);
+        if (!Directory.Exists(destDir))
+        {
+            Directory.CreateDirectory(destDir);
+        }
+
+        foreach (var file in dir.GetFiles())
+        {
+            var tempPath = Path.Combine(destDir, file.Name);
+            file.CopyTo(tempPath, overwrite);
+        }
+
+        foreach (var subDir in dir.GetDirectories())
+        {
+            var tempPath = Path.Combine(destDir, subDir.Name);
+            CopyDirectory(subDir.FullName, tempPath, overwrite);
+        }
+    }
+
+    private async Task SendDirectoryListingAsync(string path)
+    {
+        if (_connection is null) return;
+
+        try
+        {
+                    var files = new List<FullVantage.Shared.FileInfo>();
+        var directories = new List<FullVantage.Shared.FileInfo>();
+            long totalSize = 0;
+            int totalCount = 0;
+
+            if (Directory.Exists(path))
+            {
+                var dirInfo = new DirectoryInfo(path);
+                
+                // Get directories
+                foreach (var dir in dirInfo.GetDirectories())
+                {
+                                    directories.Add(new FullVantage.Shared.FileInfo(
+                    _agentId,
+                    dir.Name,
+                    dir.FullName,
+                    0,
+                    true,
+                    dir.LastWriteTime,
+                    dir.Attributes.ToString(),
+                    null
+                ));
+                    totalCount++;
+                }
+
+                // Get files
+                foreach (var file in dirInfo.GetFiles())
+                {
+                                    files.Add(new FullVantage.Shared.FileInfo(
+                    _agentId,
+                    file.Name,
+                    file.FullName,
+                    file.Length,
+                    false,
+                    file.LastWriteTime,
+                    file.Attributes.ToString(),
+                    null
+                ));
+                    totalSize += file.Length;
+                    totalCount++;
+                }
+            }
+
+            var listing = new DirectoryListing(_agentId, path, files, directories, totalSize, totalCount);
+            Console.WriteLine($"Created directory listing: {files.Count} files, {directories.Count} directories");
+            
+            // Send the listing back to the server
+            Console.WriteLine($"Sending DirectoryListingResponse to server");
+            await _connection.InvokeAsync("DirectoryListingResponse", listing);
+            Console.WriteLine($"DirectoryListingResponse sent successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting directory listing: {ex.Message}");
+        }
+    }
+
+    private async Task SendFileInfoAsync(string path)
+    {
+        if (_connection is null) return;
+
+        try
+        {
+            FullVantage.Shared.FileInfo? fileInfo = null;
+
+            if (File.Exists(path))
+            {
+                var file = new System.IO.FileInfo(path);
+                fileInfo = new FullVantage.Shared.FileInfo(
+                    _agentId,
+                    file.Name,
+                    file.FullName,
+                    file.Length,
+                    false,
+                    file.LastWriteTime,
+                    file.Attributes.ToString(),
+                    null
+                );
+            }
+            else if (Directory.Exists(path))
+            {
+                var dir = new System.IO.DirectoryInfo(path);
+                fileInfo = new FullVantage.Shared.FileInfo(
+                    _agentId,
+                    dir.Name,
+                    dir.FullName,
+                    0,
+                    true,
+                    dir.LastWriteTime,
+                    dir.Attributes.ToString(),
+                    null
+                );
+            }
+
+            if (fileInfo != null)
+            {
+                await _connection.InvokeAsync("FileInfoResponse", fileInfo);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting file info: {ex.Message}");
+        }
+    }
+
     private Task SafeSendAsync(CommandChunk chunk)
     {
         try
         {
             return _connection!.InvokeAsync("CommandOutput", chunk);
+        }
+        catch
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private Task SafeSendFileChunkAsync(FileTransferChunk chunk)
+    {
+        try
+        {
+            return _connection!.InvokeAsync("FileTransferChunk", chunk);
+        }
+        catch
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private Task SafeSendFileOperationResultAsync(FileOperationResult result)
+    {
+        try
+        {
+            return _connection!.InvokeAsync("FileOperationResult", result);
         }
         catch
         {
