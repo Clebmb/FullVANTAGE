@@ -57,6 +57,11 @@
   <img src="powershellex.png" alt="FullVANTAGE PowerShell Execution" width="800"/>
 </p>
 
+### File Management
+<p align="center">
+  <img src="filetransferex.gif" alt="FullVANTAGE File Management" width="800"/>
+</p>
+
 ---
 
 ## 🏗️ Architecture
@@ -142,6 +147,12 @@ dotnet build client/FullVantage.Agent.Console
 2. **Agent Type Selection** - Choose between Console (single file) or WPF (multiple files)
 3. **Instant Download** - Generate and download custom agent executables
 
+### **File Management**
+1. **File Browser** - Navigate remote file systems with a familiar tree view interface
+2. **File Transfer** - Upload and download files between local and remote systems
+3. **File Operations** - Copy, move, delete, and rename remote files and directories
+4. **Transfer Monitoring** - Track file transfer progress and status in real-time
+
 ### **Server Configuration**
 1. **Dynamic Binding** - Configure server URLs without code changes
 2. **Port Management** - Adjust server ports for different deployment scenarios
@@ -152,7 +163,7 @@ dotnet build client/FullVantage.Agent.Console
 ## 🔮 Planned Features
 
 ### **Phase 1: Enhanced Commanding**
-- [ ] **File Operations** - Upload, download, and manage remote files
+- [x] **File Operations** - Upload, download, and manage remote files
 - [ ] **Process Management** - Start, stop, and monitor remote processes
 - [ ] **Service Control** - Manage Windows services remotely
 - [ ] **Registry Operations** - Read and modify Windows registry entries
