@@ -10,6 +10,10 @@
   <strong>An experimental, work-in-progress RAT (Remote Administration Tool) for learning distributed administration patterns and agent coordination</strong>
 </p>
 
+<p align="center">
+  <strong>This project will always bee free. I am also developing a premium, telegram based remote administration tool.</strong>
+</p>
+
 ---
 
 ## ✨ Features
