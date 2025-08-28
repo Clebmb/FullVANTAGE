@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <strong>This project will always bee free. I am also developing a premium, telegram based remote administration tool.</strong>
+  <strong>This project will always bee free and open source. I am also developing a premium, telegram based remote administration tool.</strong>
 </p>
 
 ---
